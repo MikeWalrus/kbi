@@ -5,27 +5,13 @@
 #include "maximilian.h"
 #include "Player.h"
 
-class voice {
-private:
-    maxiOsc osc;
-    maxiEnv env;
-    double freq;
-    Player::Note current_note;
-
-public:
-    voice();
-    double output();
-
-    void on(const Player::Note& note);
-    void off();
-};
-
-double voice::output()
+double Voice::output()
 {
-    return env.adsr(osc.sinewave(freq), env.trigger);
+    volume = env.adsr(1., env.trigger);
+    return osc.sinewave(freq)*volume;
 }
 
-voice::voice()
+Voice::Voice()
 {
     env.setAttack(5);
     env.setDecay(50);  // Needs to be at least 1
@@ -33,15 +19,26 @@ voice::voice()
     env.setRelease(1000);
 }
 
-void voice::on(const Player::Note& note)
+void Voice::on(int midi_pitch)
+{
+    env.trigger = 1;
+    freq = Player::midiToFrequency(midi_pitch);
+}
+
+void Voice::on(const Player::Note& note)
 {
     env.trigger = 1;
     freq = Player::noteToFrequency(note);
 }
 
-void voice::off()
+void Voice::off()
 {
     env.trigger = 0;
+}
+
+bool Voice::shouldBeDeleted()
+{
+    return (volume<0.1) && env.trigger==0;
 }
 
 Player::Player(void** stream, double* output)
@@ -69,60 +66,70 @@ void Player::start() const { reportIfPaFail(Pa_StartStream(*stream)); }
 
 void Player::stop()
 {
-    is_playing_a_note = false;
-    note_count = 0;
     reportIfPaFail(Pa_StopStream(*stream));
+    for_each(voices.begin(), voices.end(), [](std::pair<const int, Voice*>& pair){delete pair.second;});
+    voices.clear();
 }
-
-maxiOsc mySwitchableOsc;//
-double myOscOutput, myCurrentVolume;//
-maxiEnv myEnvelope;
-voice myVoice;
 
 void setup()
 {//some inits
-
-    //Timing is in ms
-
-    myEnvelope.setAttack(500);
-    myEnvelope.setDecay(50);  // Needs to be at least 1
-    myEnvelope.setSustain(100);
-    myEnvelope.setRelease(1000);
 }
 
 void Player::play(double* output)
 {
-
-    /*
-    //notice that we feed in a value of 1. to create an envelope shape we can apply later.
-    myCurrentVolume = myEnvelope.adsr(1., myEnvelope.trigger);
-
-    // You'll notice that these 'if' statements don't require curly braces "{}".
-    // This is because there is only one outcome if the statement is true.
-    if (is_playing_a_note) {
-            myEnvelope.trigger = 1; // Trigger the envelop
-            cout << "Envelope Triggered!" << endl;
+    double mixed_out = 0;
+    for (auto it = voices.begin(); it!=voices.end();) {
+        Voice * voice;
+        // Don't know why voice is sometimes NULL
+        if (voice == nullptr)
+            throw std::exception();
+        auto voice_output = voice->output();
+        if (voice->shouldBeDeleted()) {
+            cout << "Delete and erase."<<  it->first<< endl;
+            delete voice;
+            it = voices.erase(it);
+            continue;
+        }
+        mixed_out += voice_output;
+        it++;
     }
-    else myEnvelope.trigger = 0;//release the envelope to make it fade out only if it's been triggered
-
-    myOscOutput = mySwitchableOsc.sinewave(frequency);//one osc object can produce whichever waveform you want.
-
-     */
-    output[0] = myVoice.output();//left speaker
+    output[0] = mixed_out;//left speaker
     output[1] = output[0];
 
 }
 
 double Player::noteToFrequency(const Note& note)
 {
+    return 440.0*pow(2.0, (relative_to_A_4(note)/12.0));
+}
+
+double Player::midiToFrequency(int pitch)
+{
+    return 440.0*pow(2.0, ((pitch - 69.0)/12.0));
+}
+
+int Player::relative_to_A_4(const Note& note)
+{
     int scale[7] = {0, 2, 3, 5, 7, 8, 10};
-    int relative_to_A_4 = scale[note.letter - 'A'] + 12*(note.number - 4);
-    return 440.0*pow(2.0, (relative_to_A_4/12.0));
+    return scale[note.letter - 'A'] + 12*(note.number - 4);
 }
 
 void Player::note_on(const Note& note)
 {
-    myVoice.on(note);
+    int pitch = note.to_midi_pitch();
+    cout << pitch << endl;
+    auto it = voices.find(pitch);
+    if (it==voices.end()) {
+        cout << "new voice" << endl;
+        auto voice_ptr = new Voice();
+        voice_ptr->on(pitch);
+        voices[pitch] = voice_ptr;
+    }
+    else {
+        cout << "using existing voice" << endl;
+        it->second->on(pitch);
+    }
+
     /*
     if (note!=prev_note) {
         cout << (char) note.letter << note.number << endl;
@@ -138,7 +145,13 @@ void Player::note_on(const Note& note)
 
 void Player::note_off(const Note& note)
 {
-    myVoice.off();
+    int pitch = note.to_midi_pitch();
+    cout << "Request to stop" << pitch << endl;
+    auto it = voices.find(pitch);
+    if (it!=voices.end()) {
+        (*it).second->off();
+    }
+
     /*
     --note_count;
     cout << "count subtracted: " << note_count << endl;

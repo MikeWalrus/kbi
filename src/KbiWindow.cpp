@@ -11,7 +11,6 @@
 #define SCIENTIFIC_NOTATION
 #undef  SCIENTIFIC_NOTATION
 
-void reportIfPaFail(PaError err);
 
 KbiWindow::KbiWindow(Player* p_player)
         :m_button("Play"), player(p_player)
@@ -35,15 +34,14 @@ void KbiWindow::on_button_clicked()
 }
 
 KbiWindow::~KbiWindow()
-{
-}
+= default;
 
 void KbiWindow::on_key_released(guint keyVal, guint, Gdk::ModifierType state)
 {
-    vector<int> notes{'k', 'l', 'a', 's', 'd', 'f', 'j', ';'};
-    auto note_letter = keyVal - GDK_KEY_a + 'a';
-    if (find(notes.begin(), notes.end(), note_letter)!=notes.end())
-        player->note_off({0, 0});
+
+    Player::Note note;
+    if (hasGotNote(keyVal, state, note))
+        player->note_off(note);
 }
 
 bool KbiWindow::on_key_pressed(guint keyVal, guint, Gdk::ModifierType state)
@@ -62,24 +60,32 @@ bool KbiWindow::on_key_pressed(guint keyVal, guint, Gdk::ModifierType state)
         player->noteOn({note_letter, note_number});
     }
 #else
-    note_letter = keyVal - GDK_KEY_a + 'a';
-    vector<int> notes{'k', 'l', 'a', 's', 'd', 'f', 'j', ';'};
-    auto it = find(notes.cbegin(), notes.cend(), note_letter);
-    if (it!=notes.cend()) {
-        note_letter = 'A' + static_cast<int>(it - notes.cbegin());
-        note_number = note_letter<='B' ? 4 : 3;
-        if (it==notes.cend() - 1) {
-            note_letter = 'C';
-            note_number = 4;
-        }
-        if ((state & Gdk::ModifierType::CONTROL_MASK)==Gdk::ModifierType::CONTROL_MASK)
-            ++note_number;
-        if ((state & Gdk::ModifierType::ALT_MASK)==Gdk::ModifierType::ALT_MASK)
-            ++note_number;
-        player->note_on({note_letter, note_number});
-    }
+    Player::Note note;
+    if (hasGotNote(keyVal, state, note))
+        player->note_on(note);
 #endif
     return true;
+}
+
+bool KbiWindow::hasGotNote(guint keyVal, const Gdk::ModifierType& state, Player::Note& note) const
+{
+    note.letter = keyVal - GDK_KEY_a + 'a';
+    vector<int> notes{'k', 'l', 'a', 's', 'd', 'f', 'j', ';'};
+    auto it = find(notes.cbegin(), notes.cend(), note.letter);
+    if (it!=notes.cend()) {
+        note.letter = 'A' + static_cast<int>(it - notes.cbegin());
+        note.number = note.letter<='B' ? 4 : 3;
+        if (it==notes.cend() - 1) {
+            note.letter = 'C';
+            note.number = 4;
+        }
+        if ((state & Gdk::ModifierType::CONTROL_MASK)==Gdk::ModifierType::CONTROL_MASK)
+            ++note.number;
+        if ((state & Gdk::ModifierType::ALT_MASK)==Gdk::ModifierType::ALT_MASK)
+            ++note.number;
+        return true;
+    }
+    return false;
 }
 
 

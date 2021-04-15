@@ -8,6 +8,7 @@
 #include <gtkmm/window.h>
 #include <gtkmm/button.h>
 #include "portaudio.h"
+#include "Player.h"
 
 class Player;
 
@@ -23,6 +24,8 @@ protected:
     Gtk::Button m_button;
 private:
     Player* player;
+
+    bool hasGotNote(guint keyVal, const Gdk::ModifierType& state, Player::Note& note) const;
 };
 
 

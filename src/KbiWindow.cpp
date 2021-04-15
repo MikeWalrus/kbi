@@ -43,7 +43,7 @@ void KbiWindow::on_key_released(guint keyVal, guint, Gdk::ModifierType state)
     vector<int> notes{'k', 'l', 'a', 's', 'd', 'f', 'j', ';'};
     auto note_letter = keyVal - GDK_KEY_a + 'a';
     if (find(notes.begin(), notes.end(), note_letter)!=notes.end())
-        player->noteOff();
+        player->note_off({0, 0});
 }
 
 bool KbiWindow::on_key_pressed(guint keyVal, guint, Gdk::ModifierType state)
@@ -76,7 +76,7 @@ bool KbiWindow::on_key_pressed(guint keyVal, guint, Gdk::ModifierType state)
             ++note_number;
         if ((state & Gdk::ModifierType::ALT_MASK)==Gdk::ModifierType::ALT_MASK)
             ++note_number;
-        player->noteOn({note_letter, note_number});
+        player->note_on({note_letter, note_number});
     }
 #endif
     return true;

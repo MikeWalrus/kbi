@@ -34,9 +34,11 @@ public:
     double* output;
     double frequency;
 
-    void noteOn(Note note);
+    void note_on(const Note& note);
 
-    void noteOff();
+    void note_off(const Note& note);
+
+    static double noteToFrequency(const Note& note);
 
 private:
     PaStream** stream;
@@ -47,7 +49,6 @@ private:
     void start() const;
 
     bool is_playing_a_note = false;
-    bool is_at_the_beginning = true;
     Note prev_note = {-1, -1};
     int note_count = 0;
 };

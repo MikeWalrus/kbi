@@ -11,7 +11,6 @@
 #define SCIENTIFIC_NOTATION
 #undef  SCIENTIFIC_NOTATION
 
-
 KbiWindow::KbiWindow(Player* p_player)
         :m_button("Play"), player(p_player)
 {

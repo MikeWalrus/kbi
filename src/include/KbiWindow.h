@@ -12,22 +12,25 @@
 
 class Player;
 
-class KbiWindow : public Gtk::Window{
+class KbiWindow : public Gtk::Window {
 public:
     KbiWindow(Player* p_player);
+
     ~KbiWindow() override;
 
 protected:
     void on_button_clicked();
+
     bool on_key_pressed(guint keyVal, guint, Gdk::ModifierType state);
+
     void on_key_released(guint keyVal, guint, Gdk::ModifierType state);
+
     Gtk::Button m_button;
 private:
     Player* player;
 
     bool hasGotNote(guint keyVal, const Gdk::ModifierType& state, Player::Note& note) const;
 };
-
 
 void setup();//use this to do any initialisation if you want.
 

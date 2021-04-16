@@ -53,6 +53,7 @@ public:
     void note_off(const Note& note);
 
     static double noteToFrequency(const Note& note);
+
     static double midiToFrequency(int pitch);
 
 private:

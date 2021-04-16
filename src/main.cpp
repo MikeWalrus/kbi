@@ -8,14 +8,13 @@
 #include <portaudio.h>
 #include <gtkmm/application.h>
 
-
-
 int routing(const void* inputBuffer,
         void* outputBuffer,
         unsigned long nBufferFrames,
         const PaStreamCallbackTimeInfo* timeInfo,
         PaStreamCallbackFlags status,
         void* myPlayer);
+
 //This is main()
 int main(int argc, char* argv[])
 {
@@ -65,7 +64,7 @@ int routing(const void* inputBuffer,
     unsigned int i, j;
 
     float* buffer = (float*) outputBuffer;
-    auto player = (Player *) myPlayer;
+    auto player = (Player*) myPlayer;
     double* lastValues = player->output;
 //	double currentTime = (double) streamTime; Might come in handy for control
     if (status)

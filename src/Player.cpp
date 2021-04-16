@@ -67,7 +67,7 @@ void Player::start() const { reportIfPaFail(Pa_StartStream(*stream)); }
 void Player::stop()
 {
     reportIfPaFail(Pa_StopStream(*stream));
-    for_each(voices.begin(), voices.end(), [](std::pair<const int, Voice*>& pair){delete pair.second;});
+    for_each(voices.begin(), voices.end(), [](std::pair<const int, Voice*>& pair) { delete pair.second; });
     voices.clear();
 }
 
@@ -79,13 +79,20 @@ void Player::play(double* output)
 {
     double mixed_out = 0;
     for (auto it = voices.begin(); it!=voices.end();) {
-        Voice * voice;
-        // Don't know why voice is sometimes NULL
-        if (voice == nullptr)
-            throw std::exception();
+        Voice* voice;
+        voice = it->second;
+        // Don't know why voice is sometimes NULL here!
+        while (voice==nullptr) {
+            cout << "Oh Noooooooooo! voice is NULL again!\n!\n!\n!\n";
+            voice = it->second;
+            if (voice !=nullptr)
+            {
+                cout << "voice is good to use now?!\n";
+            }
+        }
         auto voice_output = voice->output();
         if (voice->shouldBeDeleted()) {
-            cout << "Delete and erase."<<  it->first<< endl;
+            cout << "Delete and erase." << it->first << endl;
             delete voice;
             it = voices.erase(it);
             continue;

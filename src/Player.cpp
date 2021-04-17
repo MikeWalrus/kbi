@@ -73,17 +73,12 @@ void setup()
 void Player::play()
 {
     double mixed_out = 0;
+    scoped_lock<mutex> lock(voices_guard);
     for (auto it = voices.begin(); it!=voices.end();) {
         Voice* voice;
         voice = it->second;
         // Don't know why voice is sometimes NULL here!
-        while (voice==nullptr) {
-            cout << "Oh Noooooooooo! voice is NULL again!\n!\n!\n!\n";
-            voice = it->second;
-            if (voice!=nullptr) {
-                cout << "voice is good to use now?!\n";
-            }
-        }
+        // Seems it can't be NULL now, since mutex locks this.
         auto voice_output = voice->output();
         if (voice->shouldBeDeleted()) {
             cout << "Delete and erase." << it->first << endl;
@@ -93,7 +88,6 @@ void Player::play()
         }
         mixed_out += voice_output;
         it++;
-        // TODO: another thread may invalidate this iterator
     }
     output[0] = mixed_out;//left speaker
     output[1] = output[0];
@@ -107,6 +101,7 @@ int Player::relative_to_A_4(const Note& note)
 
 void Player::note_on(const Note& note)
 {
+    scoped_lock<mutex> lock(voices_guard);
     int pitch = note.to_midi_pitch();
     cout << pitch << endl;
     auto it = voices.find(pitch);

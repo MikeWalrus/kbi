@@ -7,6 +7,7 @@
 
 #include <map>
 #include <maxiSynths.h>
+#include <mutex>
 #include "portaudio.h"
 #include "maximilian.h"
 #include "utilities.h"
@@ -59,6 +60,7 @@ public:
 private:
     PaStream** stream;
     map<int, Voice*> voices;
+    mutex voices_guard;
     map<int, Voice*>::size_type voices_limit = 1; // Maximum number of voices. 0 means no limits.
 
     void start() const;

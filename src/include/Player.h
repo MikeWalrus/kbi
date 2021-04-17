@@ -59,6 +59,7 @@ public:
 private:
     PaStream** stream;
     map<int, Voice*> voices;
+    map<int, Voice*>::size_type voices_limit = 1; // Maximum number of voices. 0 means no limits.
 
     void start() const;
 

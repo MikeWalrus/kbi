@@ -93,6 +93,7 @@ void Player::play()
         }
         mixed_out += voice_output;
         it++;
+        // TODO: another thread may invalidate this iterator
     }
     output[0] = mixed_out;//left speaker
     output[1] = output[0];
@@ -109,16 +110,21 @@ void Player::note_on(const Note& note)
     int pitch = note.to_midi_pitch();
     cout << pitch << endl;
     auto it = voices.find(pitch);
-    if (it==voices.end()) {
-        cout << "new voice" << endl;
-        auto voice_ptr = new Voice();
-        voice_ptr->on(pitch);
-        voices[pitch] = voice_ptr;
-    }
-    else {
-        cout << "using existing voice" << endl;
+    if (!(it==voices.end())) {
         it->second->on(pitch);
+        return;
     }
+    if (voices_limit && voices.size() + 1>voices_limit) {
+        auto existing_voice = voices.begin()->second;
+        existing_voice->on(pitch);
+        voices.erase(voices.begin());
+        voices[pitch] = existing_voice;
+        return;
+    }
+    cout << "new voice" << endl;
+    auto voice_ptr = new Voice();
+    voice_ptr->on(pitch);
+    voices[pitch] = voice_ptr;
 }
 
 void Player::note_off(const Note& note)

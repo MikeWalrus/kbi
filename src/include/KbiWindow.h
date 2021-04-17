@@ -7,6 +7,8 @@
 
 #include <gtkmm/window.h>
 #include <gtkmm/button.h>
+#include <gtkmm/eventcontroller.h>
+#include <gtkmm/eventcontrollerkey.h>
 #include "portaudio.h"
 #include "Player.h"
 
@@ -25,9 +27,10 @@ protected:
 
     void on_key_released(guint keyVal, guint, Gdk::ModifierType state);
 
-    Gtk::Button m_button;
 private:
+    Gtk::Button m_button;
     Player* player;
+    Glib::RefPtr<Gtk::EventControllerKey> event_controller_key;
 
     bool hasGotNote(guint keyVal, const Gdk::ModifierType& state, Player::Note& note) const;
 };

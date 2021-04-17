@@ -16,12 +16,9 @@ KbiWindow::KbiWindow(Player* p_player)
 {
     m_button.set_margin(100);
     m_button.signal_clicked().connect(sigc::mem_fun(*this, &KbiWindow::on_button_clicked));
-    auto controller_key = Gtk::EventControllerKey::create();
-    auto controller_focus = Gtk::EventControllerFocus::create();
-    controller_key->signal_key_pressed().connect(sigc::mem_fun(*this, &KbiWindow::on_key_pressed), false);
-    controller_key->signal_key_released().connect(sigc::mem_fun(*this, &KbiWindow::on_key_released), true);
-    controller_focus->signal_leave().connect(sigc::mem_fun(*player, &Player::stop));
-    add_controller(controller_key);
+    event_controller_key = Gtk::EventControllerKey::create();
+    event_controller_key->signal_key_pressed().connect(sigc::mem_fun(*this, &KbiWindow::on_key_pressed), false);
+    event_controller_key->signal_key_released().connect(sigc::mem_fun(*this, &KbiWindow::on_key_released), true);
     set_child(m_button);
     setup();
 }
@@ -29,7 +26,14 @@ KbiWindow::KbiWindow(Player* p_player)
 void KbiWindow::on_button_clicked()
 {
     bool isPlaying = player->toggle();
-    m_button.set_label(isPlaying ? "Stop" : "Play");
+    if (isPlaying) {
+        m_button.set_label("Stop");
+        add_controller(event_controller_key);
+    }
+    else {
+        m_button.set_label("Play");
+        remove_controller(event_controller_key);
+    }
 }
 
 KbiWindow::~KbiWindow()

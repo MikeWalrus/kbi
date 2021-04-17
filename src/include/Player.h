@@ -43,18 +43,18 @@ public:
 
     void stop();
 
-    void play(double* output);
+    void play();
 
     double* output;
-    double frequency;
 
     void note_on(const Note& note);
 
     void note_off(const Note& note);
 
-    static double noteToFrequency(const Note& note);
-
-    static double midiToFrequency(int pitch);
+    static double midiToFrequency(int pitch)
+    {
+        return 440.0*pow(2.0, ((pitch - 69.0)/12.0));
+    }
 
 private:
     PaStream** stream;
@@ -70,23 +70,21 @@ class Voice {
 private:
     maxiOsc osc;
     maxiEnv env;
-    double freq;
-    double volume;
-    Player::Note current_note;
-    int pitch;
+    double freq{};
+    double volume{};
+    Player::Note current_note{};
+    int pitch{};
 
 public:
     Voice();
 
     double output();
 
-    void on(const Player::Note& note);
-
     void off();
 
     void on(int midi_pitch);
 
-    bool shouldBeDeleted();
+    [[nodiscard]] bool shouldBeDeleted() const;
 };
 
 #endif //KBI_PLAYER_H

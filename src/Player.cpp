@@ -25,20 +25,14 @@ void Voice::on(int midi_pitch)
     freq = Player::midiToFrequency(midi_pitch);
 }
 
-void Voice::on(const Player::Note& note)
-{
-    env.trigger = 1;
-    freq = Player::noteToFrequency(note);
-}
-
 void Voice::off()
 {
     env.trigger = 0;
 }
 
-bool Voice::shouldBeDeleted()
+bool Voice::shouldBeDeleted() const
 {
-    return (volume<0.1) && env.trigger==0;
+    return (volume<0.0001) && env.trigger==0;
 }
 
 Player::Player(void** stream, double* output)
@@ -46,6 +40,7 @@ Player::Player(void** stream, double* output)
 
 Player::~Player()
 {
+    stop();
     Pa_CloseStream(*stream);
 }
 
@@ -75,7 +70,7 @@ void setup()
 {//some inits
 }
 
-void Player::play(double* output)
+void Player::play()
 {
     double mixed_out = 0;
     for (auto it = voices.begin(); it!=voices.end();) {
@@ -85,8 +80,7 @@ void Player::play(double* output)
         while (voice==nullptr) {
             cout << "Oh Noooooooooo! voice is NULL again!\n!\n!\n!\n";
             voice = it->second;
-            if (voice !=nullptr)
-            {
+            if (voice!=nullptr) {
                 cout << "voice is good to use now?!\n";
             }
         }
@@ -102,22 +96,11 @@ void Player::play(double* output)
     }
     output[0] = mixed_out;//left speaker
     output[1] = output[0];
-
-}
-
-double Player::noteToFrequency(const Note& note)
-{
-    return 440.0*pow(2.0, (relative_to_A_4(note)/12.0));
-}
-
-double Player::midiToFrequency(int pitch)
-{
-    return 440.0*pow(2.0, ((pitch - 69.0)/12.0));
 }
 
 int Player::relative_to_A_4(const Note& note)
 {
-    int scale[7] = {0, 2, 3, 5, 7, 8, 10};
+    static int scale[7] = {0, 2, 3, 5, 7, 8, 10};
     return scale[note.letter - 'A'] + 12*(note.number - 4);
 }
 
@@ -136,18 +119,6 @@ void Player::note_on(const Note& note)
         cout << "using existing voice" << endl;
         it->second->on(pitch);
     }
-
-    /*
-    if (note!=prev_note) {
-        cout << (char) note.letter << note.number << endl;
-        ++note_count;
-        cout << "count added: " << note_count << endl;
-        prev_note = note;
-        frequency = noteToFrequency(note);
-        cout << " frequency " << frequency << endl;
-        is_playing_a_note = true;
-    }
-     */
 }
 
 void Player::note_off(const Note& note)
@@ -158,14 +129,4 @@ void Player::note_off(const Note& note)
     if (it!=voices.end()) {
         (*it).second->off();
     }
-
-    /*
-    --note_count;
-    cout << "count subtracted: " << note_count << endl;
-    if (note_count<=0) {
-        note_count = 0;
-        prev_note = {-1};
-        is_playing_a_note = false;
-    }
-     */
 }

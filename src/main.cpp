@@ -63,7 +63,7 @@ int routing(const void* inputBuffer,
 
     unsigned int i, j;
 
-    float* buffer = (float*) outputBuffer;
+    auto* buffer = (float*) outputBuffer;
     auto player = (Player*) myPlayer;
     double* lastValues = player->output;
 //	double currentTime = (double) streamTime; Might come in handy for control
@@ -73,7 +73,7 @@ int routing(const void* inputBuffer,
     }
 // Write interleaved audio data.
     for (i = 0; i<nBufferFrames; i++) {
-        player->play(lastValues);
+        player->play();
         for (j = 0; j<maxiSettings::channels; j++) {
             *buffer++ = lastValues[j];
         }

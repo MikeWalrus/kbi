@@ -15,5 +15,6 @@ pkg_check_modules(GTKMM gtkmm-4.0)
 # it contains documentation
 # Now the variables GTKMM_INCLUDE_DIRS, GTKMM_LIBRARY_DIRS and GTKMM_LIBRARIES
 # contain what you expect
+pkg_check_modules(PORTAUDIO2 portaudio-2.0)
 
 add_subdirectory(src)

@@ -32,7 +32,7 @@ public:
 
         bool operator<(const Note& note) const
         {
-            return  number < note.number && letter < note.letter;
+            return number < note.number || (number == note.number && letter < note.letter);
         }
 
         friend ostream& operator<<(ostream& os, const Note& note)

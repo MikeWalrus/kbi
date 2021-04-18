@@ -81,7 +81,7 @@ void Player::play()
         // Seems it can't be NULL now, since mutex locks this.
         auto voice_output = voice->output();
         if (voice->shouldBeDeleted()) {
-            cout << "Delete and erase." << it->first << endl;
+            cout << "Delete and erase " << it->first << endl;
             delete voice;
             it = voices.erase(it);
             continue;
@@ -125,7 +125,6 @@ void Player::note_on(const Note& note)
 
 void Player::note_off(const Note& note)
 {
-    cout << "Request to stop " << note << endl;
     auto it = voices.find(note);
     if (it != voices.end()) {
         (*it).second->off();

@@ -22,12 +22,12 @@ public:
 
         bool operator==(Note& note) const
         {
-            return letter==note.letter && number==note.number;
+            return letter == note.letter && number == note.number;
         }
 
         bool operator!=(Note& note) const
         {
-            return !(*this==note);
+            return !(*this == note);
         }
 
         [[nodiscard]] int to_midi_pitch() const

@@ -49,7 +49,7 @@ int main(int argc, char* argv[])
 
 void reportIfPaFail(PaError err)
 {
-    if (err!=paNoError)
+    if (err != paNoError)
         cout << "PortAudio error: " << Pa_GetErrorText(err) << endl;
 }
 
@@ -69,12 +69,12 @@ int routing(const void* inputBuffer,
 //	double currentTime = (double) streamTime; Might come in handy for control
     if (status)
         cout << "Stream underflow detected!" << endl;
-    for (i = 0; i<nBufferFrames; i++) {
+    for (i = 0; i < nBufferFrames; i++) {
     }
 // Write interleaved audio data.
-    for (i = 0; i<nBufferFrames; i++) {
+    for (i = 0; i < nBufferFrames; i++) {
         player->play();
-        for (j = 0; j<maxiSettings::channels; j++) {
+        for (j = 0; j < maxiSettings::channels; j++) {
             *buffer++ = lastValues[j];
         }
     }

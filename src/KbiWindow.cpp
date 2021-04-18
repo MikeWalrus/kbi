@@ -11,7 +11,6 @@
 #define SCIENTIFIC_NOTATION
 #undef  SCIENTIFIC_NOTATION
 
-
 KbiWindow::KbiWindow(Player* p_player)
         :
         kbi_box_top(Gtk::Orientation::VERTICAL, 0),
@@ -35,13 +34,14 @@ KbiWindow::KbiWindow(Player* p_player)
 
     //set kbi_button_control_play_or_stop
     kbi_button_control_play_or_stop.set_margin(10);
-    kbi_button_control_play_or_stop.set_size_request(KbiWindow::kbi_window_width / 2);
+    kbi_button_control_play_or_stop.set_size_request(KbiWindow::kbi_window_width/2);
     kbi_button_control_play_or_stop.set_expand(true);
-    kbi_button_control_play_or_stop.signal_clicked().connect(sigc::mem_fun(*this, &KbiWindow::on_button_control_play_or_stop_clicked));
+    kbi_button_control_play_or_stop.signal_clicked().connect(
+            sigc::mem_fun(*this, &KbiWindow::on_button_control_play_or_stop_clicked));
 
     //set kbi_button_quit
     kbi_button_quit.set_margin(10);
-    kbi_button_quit.set_size_request(KbiWindow::kbi_window_width / 2);
+    kbi_button_quit.set_size_request(KbiWindow::kbi_window_width/2);
     kbi_button_quit.set_expand(true);
     kbi_button_quit.signal_clicked().connect(sigc::mem_fun(*this, &KbiWindow::on_button_quit_clicked));
 
@@ -65,7 +65,8 @@ void KbiWindow::on_button_control_play_or_stop_clicked()
     }
 }
 
-void KbiWindow::on_button_quit_clicked() {
+void KbiWindow::on_button_quit_clicked()
+{
     hide();
 }
 
@@ -108,16 +109,16 @@ bool KbiWindow::hasGotNote(guint keyVal, const Gdk::ModifierType& state, Player:
     note.letter = keyVal - GDK_KEY_a + 'a';
     vector<int> notes{'k', 'l', 'a', 's', 'd', 'f', 'j', ';'};
     auto it = find(notes.cbegin(), notes.cend(), note.letter);
-    if (it!=notes.cend()) {
+    if (it != notes.cend()) {
         note.letter = 'A' + static_cast<int>(it - notes.cbegin());
-        note.number = note.letter<='B' ? 4 : 3;
-        if (it==notes.cend() - 1) {
+        note.number = note.letter <= 'B' ? 4 : 3;
+        if (it == notes.cend() - 1) {
             note.letter = 'C';
             note.number = 4;
         }
-        if ((state & Gdk::ModifierType::CONTROL_MASK)==Gdk::ModifierType::CONTROL_MASK)
+        if ((state & Gdk::ModifierType::CONTROL_MASK) == Gdk::ModifierType::CONTROL_MASK)
             ++note.number;
-        if ((state & Gdk::ModifierType::ALT_MASK)==Gdk::ModifierType::ALT_MASK)
+        if ((state & Gdk::ModifierType::ALT_MASK) == Gdk::ModifierType::ALT_MASK)
             ++note.number;
         return true;
     }

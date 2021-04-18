@@ -32,7 +32,7 @@ void Voice::off()
 
 bool Voice::shouldBeDeleted() const
 {
-    return (volume<0.0001) && env.trigger==0;
+    return (volume < 0.0001) && env.trigger == 0;
 }
 
 Player::Player(void** stream, double* output)
@@ -74,7 +74,7 @@ void Player::play()
 {
     double mixed_out = 0;
     scoped_lock<mutex> lock(voices_guard);
-    for (auto it = voices.begin(); it!=voices.end();) {
+    for (auto it = voices.begin(); it != voices.end();) {
         Voice* voice;
         voice = it->second;
         // Don't know why voice is sometimes NULL here!
@@ -105,11 +105,11 @@ void Player::note_on(const Note& note)
     int pitch = note.to_midi_pitch();
     cout << pitch << endl;
     auto it = voices.find(pitch);
-    if (!(it==voices.end())) {
+    if (!(it == voices.end())) {
         it->second->on(pitch);
         return;
     }
-    if (voices_limit && voices.size() + 1>voices_limit) {
+    if (voices_limit && voices.size() + 1 > voices_limit) {
         auto existing_voice = voices.begin()->second;
         existing_voice->on(pitch);
         voices.erase(voices.begin());
@@ -127,7 +127,7 @@ void Player::note_off(const Note& note)
     int pitch = note.to_midi_pitch();
     cout << "Request to stop" << pitch << endl;
     auto it = voices.find(pitch);
-    if (it!=voices.end()) {
+    if (it != voices.end()) {
         (*it).second->off();
     }
 }

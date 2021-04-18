@@ -70,8 +70,6 @@ private:
 
     void start() const;
 
-    static int relative_to_A_4(const Note& note);
-
 };
 
 class Voice {

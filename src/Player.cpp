@@ -133,7 +133,7 @@ vector<Player::Note> Player::get_current_notes()
 {
     scoped_lock<mutex> lock(voices_guard);
     vector<Note> ret;
-    for_each(voices.begin(), voices.end(), [&ret](decltype(*voices.begin()) pair){ret.push_back(pair.first);});
+    for_each(voices.begin(), voices.end(), [&ret](decltype(*voices.begin()) pair) { ret.push_back(pair.first); });
     return ret;
 }
 

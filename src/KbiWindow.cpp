@@ -134,8 +134,7 @@ bool KbiWindow::hasGotNote(guint keyVal, const Gdk::ModifierType& state, Player:
 void KbiWindow::print_current_notes()
 {
     auto current_notes = player->get_current_notes();
-    for (const auto& note : current_notes)
-    {
+    for (const auto& note : current_notes) {
         cout << note << " ";
     }
     cout << endl;

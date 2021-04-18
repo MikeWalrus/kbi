@@ -9,6 +9,7 @@
 #include <gtkmm/button.h>
 #include <gtkmm/eventcontroller.h>
 #include <gtkmm/eventcontrollerkey.h>
+#include <gtkmm/box.h>
 #include "portaudio.h"
 #include "Player.h"
 
@@ -21,14 +22,21 @@ public:
     ~KbiWindow() override;
 
 protected:
-    void on_button_clicked();
+    void on_button_control_play_or_stop_clicked();
 
     bool on_key_pressed(guint keyVal, guint, Gdk::ModifierType state);
 
     void on_key_released(guint keyVal, guint, Gdk::ModifierType state);
 
+    void on_button_quit_clicked();
+
 private:
-    Gtk::Button m_button;
+
+    int kbi_window_width = 300;            //decide window's width
+    int kbi_window_height = 400;           //decide window's height
+    Gtk::Box kbi_box_top, kbi_box1, kbi_box2;
+    Gtk::Button kbi_button_control_play_or_stop, kbi_button_quit;
+
     Player* player;
     Glib::RefPtr<Gtk::EventControllerKey> event_controller_key;
 

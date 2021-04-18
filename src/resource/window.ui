@@ -2,8 +2,8 @@
 <interface>
     <object class="GtkApplicationWindow" id="app_window">
         <property name="title" translatable="yes">KeyboardInstruments</property>
-        <property name="default-width">600</property>
-        <property name="default-height">400</property>
+        <property name="default-kbi_window_width">600</property>
+        <property name="default-kbi_window_height">400</property>
         <property name="hide-on-close">True</property>
         <child>
             <object class="GtkBox" id="content_box">

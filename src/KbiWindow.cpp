@@ -75,10 +75,12 @@ KbiWindow::~KbiWindow()
 
 void KbiWindow::on_key_released(guint keyVal, guint, Gdk::ModifierType state)
 {
-
     Player::Note note;
-    if (hasGotNote(keyVal, state, note))
+    if (hasGotNote(keyVal, state, note)) {
         player->note_off(note);
+        // this shows how to find out what notes the Player is playing
+        print_current_notes();
+    }
 }
 
 bool KbiWindow::on_key_pressed(guint keyVal, guint, Gdk::ModifierType state)
@@ -98,8 +100,11 @@ bool KbiWindow::on_key_pressed(guint keyVal, guint, Gdk::ModifierType state)
     }
 #else
     Player::Note note;
-    if (hasGotNote(keyVal, state, note))
+    if (hasGotNote(keyVal, state, note)) {
         player->note_on(note);
+        // this shows how to find out what notes the Player is playing
+        print_current_notes();
+    }
 #endif
     return true;
 }
@@ -123,6 +128,17 @@ bool KbiWindow::hasGotNote(guint keyVal, const Gdk::ModifierType& state, Player:
         return true;
     }
     return false;
+}
+
+// Helper function that demonstrate how to find out current notes.
+void KbiWindow::print_current_notes()
+{
+    auto current_notes = player->get_current_notes();
+    for (const auto& note : current_notes)
+    {
+        cout << note << " ";
+    }
+    cout << endl;
 }
 
 

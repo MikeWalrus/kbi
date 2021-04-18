@@ -103,8 +103,6 @@ double Player::noteToFrequency(const Note& note)
 void Player::note_on(const Note& note)
 {
     scoped_lock<mutex> lock(voices_guard);
-    // int pitch = note.to_midi_pitch();
-    //cout << pitch << endl;
     auto it = voices.find(note);
     if (!(it == voices.end())) {
         it->second->on(note);
@@ -130,3 +128,12 @@ void Player::note_off(const Note& note)
         (*it).second->off();
     }
 }
+
+vector<Player::Note> Player::get_current_notes()
+{
+    scoped_lock<mutex> lock(voices_guard);
+    vector<Note> ret;
+    for_each(voices.begin(), voices.end(), [&ret](decltype(*voices.begin()) pair){ret.push_back(pair.first);});
+    return ret;
+}
+

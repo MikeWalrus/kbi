@@ -60,11 +60,13 @@ public:
 
     static double noteToFrequency(const Note& note);
 
+    [[nodiscard]] vector<Note> get_current_notes();
+
 private:
     PaStream** stream;
     map<Note, Voice*> voices;
     mutex voices_guard;
-    decltype(voices)::size_type voices_limit = 1; // Maximum number of voices. 0 means no limits.
+    decltype(voices)::size_type voices_limit = 0; // Maximum number of voices. 0 means no limits.
 
     void start() const;
 

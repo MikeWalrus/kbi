@@ -57,6 +57,16 @@ public:
         return 440.0*pow(2.0, ((pitch - 69.0)/12.0));
     }
 
+    unsigned long get_voices_limit() const
+    {
+        return voices_limit;
+    }
+
+    void set_voices_limit(unsigned long voices_limit)
+    {
+        Player::voices_limit = voices_limit;
+    }
+
 private:
     PaStream** stream;
     map<int, Voice*> voices;

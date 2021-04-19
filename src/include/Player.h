@@ -20,19 +20,25 @@ public:
         int letter;
         int number;
 
-        bool operator==(Note& note) const
+        bool operator==(const Note& note) const
         {
             return letter == note.letter && number == note.number;
         }
 
-        bool operator!=(Note& note) const
+        bool operator!=(const Note& note) const
         {
             return !(*this == note);
         }
 
-        [[nodiscard]] int to_midi_pitch() const
+        bool operator<(const Note& note) const
         {
-            return Player::relative_to_A_4(*this) + 69;
+            return number < note.number || (number == note.number && letter < note.letter);
+        }
+
+        friend ostream& operator<<(ostream& os, const Note& note)
+        {
+            os << static_cast<char>(note.letter) << note.number;
+            return os;
         }
     };
 
@@ -52,30 +58,17 @@ public:
 
     void note_off(const Note& note);
 
-    static double midiToFrequency(int pitch)
-    {
-        return 440.0*pow(2.0, ((pitch - 69.0)/12.0));
-    }
+    static double noteToFrequency(const Note& note);
 
-    unsigned long get_voices_limit() const
-    {
-        return voices_limit;
-    }
-
-    void set_voices_limit(unsigned long voices_limit)
-    {
-        Player::voices_limit = voices_limit;
-    }
+    [[nodiscard]] vector<Note> get_current_notes();
 
 private:
     PaStream** stream;
-    map<int, Voice*> voices;
+    map<Note, Voice*> voices;
     mutex voices_guard;
-    map<int, Voice*>::size_type voices_limit = 1; // Maximum number of voices. 0 means no limits.
+    decltype(voices)::size_type voices_limit = 0; // Maximum number of voices. 0 means no limits.
 
     void start() const;
-
-    static int relative_to_A_4(const Note& note);
 
 };
 
@@ -95,7 +88,7 @@ public:
 
     void off();
 
-    void on(int midi_pitch);
+    void on(const Player::Note& note);
 
     [[nodiscard]] bool shouldBeDeleted() const;
 };

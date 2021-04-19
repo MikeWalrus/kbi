@@ -41,6 +41,8 @@ private:
     Glib::RefPtr<Gtk::EventControllerKey> event_controller_key;
 
     bool hasGotNote(guint keyVal, const Gdk::ModifierType& state, Player::Note& note) const;
+
+    void print_current_notes();
 };
 
 void setup();//use this to do any initialisation if you want.

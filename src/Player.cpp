@@ -19,10 +19,10 @@ Voice::Voice()
     env.setRelease(1000);
 }
 
-void Voice::on(int midi_pitch)
+void Voice::on(const Player::Note& note)
 {
     env.trigger = 1;
-    freq = Player::midiToFrequency(midi_pitch);
+    freq = Player::noteToFrequency(note);
 }
 
 void Voice::off()
@@ -62,7 +62,7 @@ void Player::start() const { reportIfPaFail(Pa_StartStream(*stream)); }
 void Player::stop()
 {
     reportIfPaFail(Pa_StopStream(*stream));
-    for_each(voices.begin(), voices.end(), [](std::pair<const int, Voice*>& pair) { delete pair.second; });
+    for_each(voices.begin(), voices.end(), [](decltype(*(voices.begin()))& pair) { delete pair.second; });
     voices.clear();
 }
 
@@ -81,7 +81,7 @@ void Player::play()
         // Seems it can't be NULL now, since mutex locks this.
         auto voice_output = voice->output();
         if (voice->shouldBeDeleted()) {
-            cout << "Delete and erase." << it->first << endl;
+            cout << "Delete and erase " << it->first << endl;
             delete voice;
             it = voices.erase(it);
             continue;
@@ -93,41 +93,47 @@ void Player::play()
     output[1] = output[0];
 }
 
-int Player::relative_to_A_4(const Note& note)
+double Player::noteToFrequency(const Note& note)
 {
-    static int scale[7] = {0, 2, 3, 5, 7, 8, 10};
-    return scale[note.letter - 'A'] + 12*(note.number - 4);
+    int scale[7] = {0, 2, 3, 5, 7, 8, 10};
+    int relative_to_A_4 = scale[note.letter - 'A'] + 12*(note.number - 4);
+    return 440.0*pow(2.0, (relative_to_A_4/12.0));
 }
 
 void Player::note_on(const Note& note)
 {
     scoped_lock<mutex> lock(voices_guard);
-    int pitch = note.to_midi_pitch();
-    cout << pitch << endl;
-    auto it = voices.find(pitch);
+    auto it = voices.find(note);
     if (!(it == voices.end())) {
-        it->second->on(pitch);
+        it->second->on(note);
         return;
     }
     if (voices_limit && voices.size() + 1 > voices_limit) {
         auto existing_voice = voices.begin()->second;
-        existing_voice->on(pitch);
+        existing_voice->on(note);
         voices.erase(voices.begin());
-        voices[pitch] = existing_voice;
+        voices[note] = existing_voice;
         return;
     }
     cout << "new voice" << endl;
     auto voice_ptr = new Voice();
-    voice_ptr->on(pitch);
-    voices[pitch] = voice_ptr;
+    voice_ptr->on(note);
+    voices[note] = voice_ptr;
 }
 
 void Player::note_off(const Note& note)
 {
-    int pitch = note.to_midi_pitch();
-    cout << "Request to stop" << pitch << endl;
-    auto it = voices.find(pitch);
+    auto it = voices.find(note);
     if (it != voices.end()) {
         (*it).second->off();
     }
 }
+
+vector<Player::Note> Player::get_current_notes()
+{
+    scoped_lock<mutex> lock(voices_guard);
+    vector<Note> ret;
+    for_each(voices.begin(), voices.end(), [&ret](decltype(*voices.begin()) pair) { ret.push_back(pair.first); });
+    return ret;
+}
+

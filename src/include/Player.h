@@ -19,6 +19,7 @@ public:
     struct Note {
         int letter;
         int number;
+        bool sharp = false;
 
         bool operator==(const Note& note) const
         {
@@ -30,10 +31,8 @@ public:
             return !(*this == note);
         }
 
-        bool operator<(const Note& note) const
-        {
-            return number < note.number || (number == note.number && letter < note.letter);
-        }
+        // This is C++20 magic!
+        auto operator<=>(const Note&) const = default;
 
         friend ostream& operator<<(ostream& os, const Note& note)
         {

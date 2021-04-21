@@ -20,9 +20,8 @@ KbiWindow::KbiWindow(Player* p_player)
         kbi_button_control_play_or_stop("Play"),
         kbi_button_quit("Close"),
         player(p_player),
-        controller(Controller::create(p_player))
+        controller(controllers.at("default")(p_player))
 {
-
     //set child widgets
     set_child(kbi_box_top);
     set_title("kbi");

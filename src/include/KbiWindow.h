@@ -10,7 +10,10 @@
 #include <gtkmm/eventcontroller.h>
 #include <gtkmm/eventcontrollerkey.h>
 #include <gtkmm/box.h>
+#include <functional>
+#include <map>
 #include "portaudio.h"
+#include "Ctrl.h"
 #include "Player.h"
 #include "Ctrl.h"
 
@@ -35,9 +38,10 @@ private:
     Gtk::Button kbi_button_control_play_or_stop, kbi_button_quit;
 
     Player* player;
+    typedef function<shared_ptr<Ctrl>(Player*)> CtrlFactoryMethod;
+    const std::map<string, CtrlFactoryMethod> controllers = {{"default", Controller::create}};
     shared_ptr<Ctrl> controller;
 };
-
 void setup();//use this to do any initialisation if you want.
 
 void play(double* output);//run dac! Very very often. Too often in fact. er...

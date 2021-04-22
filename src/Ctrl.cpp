@@ -24,21 +24,31 @@ void Controller::print_current_notes()
 
 bool Controller::hasGotNote(guint keyVal, const Gdk::ModifierType& state, Player::Note& note)
 {
-    note.letter = keyVal - GDK_KEY_a + 'a';
-    note.letter = tolower(note.letter);
-    vector<int> notes{'k', 'l', 'a', 's', 'd', 'f', 'j', ';'};
-    auto it = find(notes.cbegin(), notes.cend(), note.letter);
+    int key_letter = keyVal - GDK_KEY_a + 'a';
+    key_letter = tolower(key_letter);
+    static const map<int, Player::Note> notes{{'a', {'C', 3}},
+                                              {'s', {'D', 3}},
+                                              {'d', {'E', 3}},
+                                              {'f', {'F', 3}},
+                                              {'j', {'G', 3}},
+                                              {'k', {'A', 4}},
+                                              {'l', {'B', 4}},
+                                              {';', {'C', 4}},
+                                              {'q', {'C', 3, true}},
+                                              {'w', {'D', 3, true}},
+                                              {'r', {'F', 3, true}},
+                                              {'u', {'G', 3, true}},
+                                              {'i', {'A', 4, true}},
+    };
+    auto it = notes.find(key_letter);
     if (it != notes.cend()) {
-        note.letter = 'A' + static_cast<int>(it - notes.cbegin());
-        note.number = note.letter <= 'B' ? 4 : 3;
-        if (it == notes.cend() - 1) {
-            note.letter = 'C';
-            note.number = 4;
-        }
-        if ((state & Gdk::ModifierType::CONTROL_MASK) == Gdk::ModifierType::CONTROL_MASK)
+        note = it->second;
+        if ((state & Gdk::ModifierType::SHIFT_MASK) == Gdk::ModifierType::SHIFT_MASK)
             ++note.number;
         if ((state & Gdk::ModifierType::ALT_MASK) == Gdk::ModifierType::ALT_MASK)
             ++note.number;
+        if ((state & Gdk::ModifierType::CONTROL_MASK) == Gdk::ModifierType::CONTROL_MASK)
+            --note.number;
         // this shows how to find out what notes the Player is playing
         print_current_notes();
         return true;

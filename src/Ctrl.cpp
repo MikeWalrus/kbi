@@ -66,8 +66,6 @@ void Controller::on_key_released(guint keyVal, guint, Gdk::ModifierType state)
 
 bool Controller::on_key_pressed(guint keyVal, guint, Gdk::ModifierType state)
 {
-    int note_number;
-    int note_letter;
 #ifdef SCIENTIFIC_NOTATION
     if (keyVal>=GDK_KEY_a && keyVal<=GDK_KEY_g) {
         note_number = note_letter <= 'B' ? 4 : 3;

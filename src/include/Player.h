@@ -59,12 +59,12 @@ public:
 
     static double noteToFrequency(const Note& note);
 
-    [[nodiscard]] vector<Note> get_current_notes();
+    [[nodiscard]] vector<Note> get_current_notes() const;
 
 private:
     PaStream** stream;
     map<Note, Voice*> voices;
-    mutex voices_guard;
+    mutable mutex voices_guard;
     decltype(voices)::size_type voices_limit = 0; // Maximum number of voices. 0 means no limits.
 
     void start() const;
@@ -77,8 +77,6 @@ private:
     maxiEnv env;
     double freq{};
     double volume{};
-    Player::Note current_note{};
-    int pitch{};
 
 public:
     Voice();

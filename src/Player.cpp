@@ -131,7 +131,7 @@ void Player::note_off(const Note& note)
     }
 }
 
-vector<Player::Note> Player::get_current_notes()
+vector<Player::Note> Player::get_current_notes() const
 {
     scoped_lock<mutex> lock(voices_guard);
     vector<Note> ret;

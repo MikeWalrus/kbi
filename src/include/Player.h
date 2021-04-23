@@ -19,6 +19,7 @@ public:
     struct Note {
         int letter;
         int number;
+        bool sharp = false;
 
         bool operator==(const Note& note) const
         {
@@ -30,14 +31,23 @@ public:
             return !(*this == note);
         }
 
+#ifndef __clang__
+
+        // This is C++20 magic! But won't compile with clang
+        auto operator<=>(const Note&) const = default;
+
+#else
         bool operator<(const Note& note) const
         {
-            return number < note.number || (number == note.number && letter < note.letter);
+            tuple<int,int,bool> lhs = {letter, number, sharp};
+            tuple<int,int,bool> rhs = {note.letter, note.number, note.sharp};
+            return lhs < rhs;
         }
+#endif
 
         friend ostream& operator<<(ostream& os, const Note& note)
         {
-            os << static_cast<char>(note.letter) << note.number;
+            os << static_cast<char>(note.letter) << note.number << (note.sharp ? '#' : ' ');
             return os;
         }
     };
@@ -60,12 +70,12 @@ public:
 
     static double noteToFrequency(const Note& note);
 
-    [[nodiscard]] vector<Note> get_current_notes();
+    [[nodiscard]] vector<Note> get_current_notes() const;
 
 private:
     PaStream** stream;
     map<Note, Voice*> voices;
-    mutex voices_guard;
+    mutable mutex voices_guard;
     decltype(voices)::size_type voices_limit = 0; // Maximum number of voices. 0 means no limits.
 
     void start() const;
@@ -78,8 +88,6 @@ private:
     maxiEnv env;
     double freq{};
     double volume{};
-    Player::Note current_note{};
-    int pitch{};
 
 public:
     Voice();

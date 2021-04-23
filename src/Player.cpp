@@ -93,11 +93,13 @@ void Player::play()
     output[1] = output[0];
 }
 
+// calculate the frequency of a note
+// Note that this doesn't check if the note is valid.
 double Player::noteToFrequency(const Note& note)
 {
     int scale[7] = {0, 2, 3, 5, 7, 8, 10};
     int relative_to_A_4 = scale[note.letter - 'A'] + 12*(note.number - 4);
-    return 440.0*pow(2.0, (relative_to_A_4/12.0));
+    return 440.0*pow(2.0, ((relative_to_A_4 + note.sharp)/12.0));
 }
 
 void Player::note_on(const Note& note)
@@ -129,7 +131,7 @@ void Player::note_off(const Note& note)
     }
 }
 
-vector<Player::Note> Player::get_current_notes()
+vector<Player::Note> Player::get_current_notes() const
 {
     scoped_lock<mutex> lock(voices_guard);
     vector<Note> ret;

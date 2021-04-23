@@ -31,12 +31,23 @@ public:
             return !(*this == note);
         }
 
-        // This is C++20 magic!
+#ifndef __clang__
+
+        // This is C++20 magic! But won't compile with clang
         auto operator<=>(const Note&) const = default;
+
+#else
+        bool operator<(const Note& note) const
+        {
+            tuple<int,int,bool> lhs = {letter, number, sharp};
+            tuple<int,int,bool> rhs = {note.letter, note.number, note.sharp};
+            return lhs < rhs;
+        }
+#endif
 
         friend ostream& operator<<(ostream& os, const Note& note)
         {
-            os << static_cast<char>(note.letter) << note.number;
+            os << static_cast<char>(note.letter) << note.number << (note.sharp ? '#' : ' ');
             return os;
         }
     };

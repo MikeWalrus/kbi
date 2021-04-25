@@ -30,6 +30,7 @@ KbiWindow::KbiWindow(Player* p_player)
     kbi_box_top.append(kbi_box2);
     kbi_box1.set_size_request(KbiWindow::kbi_window_width, KbiWindow::kbi_window_height - 100);
     kbi_box1.set_expand(true);
+    kbi_box1.append(kbi_draw);
     kbi_box2.append(kbi_button_control_play_or_stop);
     kbi_box2.append(kbi_button_quit);
 

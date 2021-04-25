@@ -13,7 +13,7 @@ add_compile_definitions(__LINUX_ALSA__)
 
 add_subdirectory(resource)
 
-add_executable(${PROJECT_NAME} main.cpp KbiWindow.cpp maximilian/maximilian.cpp Player.cpp include/Player.h include/utilities.h maximilian/libs/maxiSynths.cpp Ctrl.cpp)
+add_executable(${PROJECT_NAME} main.cpp KbiWindow.cpp maximilian/maximilian.cpp Player.cpp include/Player.h include/utilities.h maximilian/libs/maxiSynths.cpp Ctrl.cpp KbiDraw.cpp include/KbiDraw.h)
 
 set_source_files_properties(
         resource/${GRESOURCE_C}

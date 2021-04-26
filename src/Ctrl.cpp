@@ -60,7 +60,10 @@ void Controller::on_key_released(guint keyVal, guint, Gdk::ModifierType state)
 {
     Player::Note note;
     if (Controller::hasGotNote(keyVal, state, note)) {
-        get_player()->note_off(note);
+        for (int i = 2; i <= 6; i++) {
+            note.number = i;
+            get_player()->note_off(note);
+        }
     }
 }
 

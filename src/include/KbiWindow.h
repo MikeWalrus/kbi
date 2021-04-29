@@ -37,9 +37,9 @@ private:
     int kbi_window_height = 400;           //decide window's height
     Gtk::Box kbi_box_top, kbi_box1, kbi_box2;
     Gtk::Button kbi_button_control_play_or_stop, kbi_button_quit;
-    KbiDraw kbi_draw;
 
     Player* player;
+    KbiDraw kbi_draw;
     typedef function<shared_ptr<Ctrl>(Player*)> CtrlFactoryMethod;
     const std::map<string, CtrlFactoryMethod> controllers = {{"default", Controller::create}};
     shared_ptr<Ctrl> controller;

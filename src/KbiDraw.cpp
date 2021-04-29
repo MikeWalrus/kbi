@@ -3,14 +3,18 @@
 //
 
 #include "KbiDraw.h"
-#include <cairomm/context.h>
+#include <glibmm/main.h>
+#include <sstream>
 
-KbiDraw::KbiDraw() {
+KbiDraw::KbiDraw(Player *p_player)
+    :
+    player(p_player)
+{
     set_content_width(300);
     set_content_height(300);
     set_expand(true);
     set_draw_func(sigc::mem_fun(*this, &KbiDraw::on_draw));
-
+    //Glib::SignalTimeout::connect()
 }
 
 KbiDraw::~KbiDraw() {
@@ -42,16 +46,30 @@ void KbiDraw::draw_rectangle(const Cairo::RefPtr<Cairo::Context> &cr, int width,
 
 }
 
+
+
 void KbiDraw::draw_text(const Cairo::RefPtr<Cairo::Context> &cr, int rectangle_width, int rectangle_height) {
 
     Pango::FontDescription font;
 
     font.set_family("Monospace");
     font.set_weight(Pango::Weight::BOLD);
-
     font.set_size(35000);
-    auto layout = create_pango_layout("Kbi Player");
 
+    std::stringstream draw_note;
+
+    if(player->toggle()){
+        draw_note << "Kbi Player";
+    }
+    else{
+        auto current_notes = player->get_current_notes();
+        for (const auto& note : current_notes) {
+            draw_note << note << " ";
+        }
+    };
+
+
+    auto layout = create_pango_layout(draw_note.str());
     layout->set_font_description(font);
 
     int text_width;

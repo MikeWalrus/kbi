@@ -6,11 +6,11 @@
 #define KBI_KBIDRAW_H
 
 #include <gtkmm/drawingarea.h>
-
+#include "Player.h"
 
 class KbiDraw : public Gtk::DrawingArea {
 public:
-    KbiDraw();
+    KbiDraw(Player* p_player);
     virtual ~KbiDraw();
 
 protected:
@@ -20,6 +20,7 @@ private:
     void draw_rectangle(const Cairo::RefPtr<Cairo::Context>& cr, int width, int height);
     void draw_text(const Cairo::RefPtr<Cairo::Context>& cr, int rectangle_width, int rectangle_height);
 
+    Player *player;
 };
 
 

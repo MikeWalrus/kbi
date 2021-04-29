@@ -12,7 +12,7 @@
 #define SCIENTIFIC_NOTATION
 #undef  SCIENTIFIC_NOTATION
 
-KbiWindow::KbiWindow(Player* p_player)
+KbiWindow::KbiWindow(Player *p_player)
         :
         kbi_box_top(Gtk::Orientation::VERTICAL, 0),
         kbi_box1(Gtk::Orientation::VERTICAL, 20),
@@ -20,8 +20,9 @@ KbiWindow::KbiWindow(Player* p_player)
         kbi_button_control_play_or_stop("Play"),
         kbi_button_quit("Close"),
         player(p_player),
-        controller(controllers.at("default")(p_player))
-{
+        kbi_draw(p_player),
+        controller(controllers.at("default")(p_player)) {
+
     //set child widgets
     set_child(kbi_box_top);
     set_title("kbi");

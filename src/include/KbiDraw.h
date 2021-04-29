@@ -17,10 +17,12 @@ protected:
     void on_draw(const Cairo::RefPtr<Cairo::Context>& cr, int width, int height);
 
 private:
-    void draw_rectangle(const Cairo::RefPtr<Cairo::Context>& cr, int width, int height);
+    static void draw_rectangle(const Cairo::RefPtr<Cairo::Context>& cr, int width, int height);
     void draw_text(const Cairo::RefPtr<Cairo::Context>& cr, int rectangle_width, int rectangle_height);
 
     Player *player;
+
+    bool refresh();
 };
 
 

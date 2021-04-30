@@ -1,10 +1,4 @@
-//
-// Created by mike on 4/7/21.
-//
-
 #include "KbiWindow.h"
-#include "maximilian.h"
-#include "portaudio.h"
 #include "Player.h"
 #include "Ctrl.h"
 #include <gtkmm.h>
@@ -20,8 +14,10 @@ KbiWindow::KbiWindow(Player* p_player)
         kbi_button_control_play_or_stop("Play"),
         kbi_button_quit("Close"),
         player(p_player),
+        kbi_draw(p_player),
         controller(controllers.at("default")(p_player))
 {
+
     //set child widgets
     set_child(kbi_box_top);
     set_title("kbi");
@@ -30,6 +26,7 @@ KbiWindow::KbiWindow(Player* p_player)
     kbi_box_top.append(kbi_box2);
     kbi_box1.set_size_request(KbiWindow::kbi_window_width, KbiWindow::kbi_window_height - 100);
     kbi_box1.set_expand(true);
+    kbi_box1.append(kbi_draw);
     kbi_box2.append(kbi_button_control_play_or_stop);
     kbi_box2.append(kbi_button_quit);
 

@@ -1,7 +1,3 @@
-//
-// Created by mike on 4/10/21.
-//
-#include <maxiSynths.h>
 #include "maximilian.h"
 #include "Player.h"
 

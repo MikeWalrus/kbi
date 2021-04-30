@@ -35,8 +35,31 @@ bool Voice::shouldBeDeleted() const
     return (volume < 0.0001) && env.trigger == 0;
 }
 
+double Voice::get_freq() const
+{
+    return freq;
+}
+
+double Voice::get_volume() const
+{
+    return volume;
+}
+
+void Voice::set_adsr(int attack, int decay, int sustain, int release)
+{
+    env.setAttack(attack);
+    env.setDecay(decay);
+    env.setSustain(sustain);
+    env.setRelease(release);
+}
+
+maxiSample SamplerVoice::mother_of_samples; // TODO: change its name
+
 Player::Player(void** stream, double* output)
-        :stream(stream), output(output) { }
+        :stream(stream), output(output)
+{
+    SamplerVoice::mother_of_samples.load("/home/mike/repos/kbi/src/resource/guitar.wav");
+}
 
 Player::~Player()
 {
@@ -135,7 +158,38 @@ vector<Player::Note> Player::get_current_notes() const
 {
     scoped_lock<mutex> lock(voices_guard);
     vector<Note> ret;
+    ret.reserve(voices.size());
     for_each(voices.begin(), voices.end(), [&ret](decltype(*voices.begin()) pair) { ret.push_back(pair.first); });
     return ret;
+}
+
+double SamplerVoice::output()
+{
+    Voice::output();
+    return get_volume()
+            *sample.play(get_freq()/Player::noteToFrequency({'C', 3})*2./sample.getLength()*maxiSettings::sampleRate,
+                    sample.getLength()/2,
+                    sample.getLength());
+}
+
+void SamplerVoice::off()
+{
+    Voice::off();
+    hasTriggered = false;
+}
+
+void SamplerVoice::on(const Player::Note& note)
+{
+    Voice::on(note);
+    if (!hasTriggered) {
+        sample.trigger();
+        hasTriggered = true;
+    }
+}
+
+SamplerVoice::SamplerVoice()
+        :sample(mother_of_samples)
+{
+    set_adsr(0, 1, 100, 1000);
 }
 

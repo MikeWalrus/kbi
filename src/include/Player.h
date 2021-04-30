@@ -56,6 +56,10 @@ public:
 
     virtual ~Player();
 
+    Player(const Player&) = delete;
+
+    Player& operator=(const Player&) = delete;
+
     bool toggle();
 
     void stop();
@@ -92,13 +96,37 @@ private:
 public:
     Voice();
 
-    double output();
+    virtual double output();
 
-    void off();
+    virtual void off();
 
-    void on(const Player::Note& note);
+    virtual void on(const Player::Note& note);
 
     [[nodiscard]] bool shouldBeDeleted() const;
+
+    void set_adsr(int attack, int decay, int sustain, int release);
+
+protected:
+    [[nodiscard]] double get_freq() const;
+
+public:
+    double get_volume() const;
+};
+
+class SamplerVoice : public Voice {
+public:
+    SamplerVoice();
+
+    double output() override;
+
+    void off() override;
+
+    void on(const Player::Note& note) override;
+
+    static maxiSample mother_of_samples; // TODO: change its name
+private:
+    maxiSample sample;
+    bool hasTriggered = false;
 };
 
 #endif //KBI_PLAYER_H

@@ -779,7 +779,7 @@ double maxiSample::play(double frequency, double start, double end, double &pos)
 
 	if (frequency >0.) {
 		if (pos<start) {
-			pos=start;
+			//pos=start;
 		}
 
 		if ( pos >= end ) pos = start;

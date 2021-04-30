@@ -16,7 +16,7 @@
 #include "Ctrl.h"
 #include "Player.h"
 #include "Ctrl.h"
-#include "KbiDraw.h"
+#include "NotesDrawingArea.h"
 
 class Player;
 
@@ -39,7 +39,7 @@ private:
     Gtk::Button kbi_button_control_play_or_stop, kbi_button_quit;
 
     Player* player;
-    KbiDraw kbi_draw;
+    NotesDrawingArea kbi_draw;
     typedef function<shared_ptr<Ctrl>(Player*)> CtrlFactoryMethod;
     const std::map<string, CtrlFactoryMethod> controllers = {{"default", Controller::create}};
     shared_ptr<Ctrl> controller;

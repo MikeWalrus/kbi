@@ -1,10 +1,4 @@
-//
-// Created by mike on 4/7/21.
-//
-
 #include "KbiWindow.h"
-#include "maximilian.h"
-#include "portaudio.h"
 #include "Player.h"
 #include "Ctrl.h"
 #include <gtkmm.h>

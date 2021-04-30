@@ -1,6 +1,3 @@
-//
-// Created by mike on 4/7/21.
-//
 #include "KbiWindow.h"
 #include "maximilian.h"
 #include "Player.h"

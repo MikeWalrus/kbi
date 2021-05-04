@@ -11,6 +11,7 @@ KbiWindow::KbiWindow(Player* p_player)
         kbi_box_top(Gtk::Orientation::VERTICAL, 0),
         kbi_box1(Gtk::Orientation::VERTICAL, 20),
         kbi_box2(Gtk::Orientation::HORIZONTAL, 20),
+        kbi_checkbutton_control_mixed_out("mixed_out"),
         kbi_button_control_play_or_stop("Play"),
         kbi_button_quit("Close"),
         player(p_player),
@@ -27,6 +28,7 @@ KbiWindow::KbiWindow(Player* p_player)
     kbi_box1.set_size_request(KbiWindow::kbi_window_width, KbiWindow::kbi_window_height - 100);
     kbi_box1.set_expand(true);
     kbi_box1.append(kbi_draw);
+    kbi_box2.append(kbi_checkbutton_control_mixed_out);
     kbi_box2.append(kbi_button_control_play_or_stop);
     kbi_box2.append(kbi_button_quit);
 
@@ -48,6 +50,15 @@ KbiWindow::KbiWindow(Player* p_player)
     kbi_button_quit.signal_clicked().connect(
             sigc::mem_fun(*this, &KbiWindow::on_button_quit_clicked));
 
+    //set kbi_checkbutton_control_mixed_out
+    kbi_checkbutton_control_mixed_out.set_margin(10);
+    kbi_checkbutton_control_mixed_out.set_vexpand(false);
+    kbi_checkbutton_control_mixed_out.set_hexpand(true);
+    kbi_checkbutton_control_mixed_out.set_valign(Gtk::Align::CENTER);
+    kbi_checkbutton_control_mixed_out.set_halign(Gtk::Align::FILL);
+    kbi_checkbutton_control_mixed_out.signal_toggled().connect(
+            sigc::mem_fun(*this, &KbiWindow::on_checkbutton_control_mixed_out_toggled));
+
     setup();
 }
 
@@ -67,6 +78,10 @@ void KbiWindow::on_button_control_play_or_stop_clicked()
 void KbiWindow::on_button_quit_clicked()
 {
     hide();
+}
+
+void KbiWindow::on_checkbutton_control_mixed_out_toggled() {
+
 }
 
 KbiWindow::~KbiWindow()

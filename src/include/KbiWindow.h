@@ -29,8 +29,10 @@ public:
 
 protected:
     void on_button_control_play_or_stop_clicked();
+
     void on_button_quit_clicked();
-    void on_checkbutton_control_mixed_out_toggled();
+
+    void on_checkbutton_control_voice_limit_toggled();
 
 private:
 
@@ -38,7 +40,7 @@ private:
     int kbi_window_height = 700;           //decide window's height
     Gtk::Box kbi_box_top, kbi_box1, kbi_box2;
     Gtk::Button kbi_button_control_play_or_stop, kbi_button_quit;
-    Gtk::CheckButton kbi_checkbutton_control_mixed_out;
+    Gtk::CheckButton kbi_checkbutton_control_voice_limit;
 
     Player* player;
     NotesDrawingArea kbi_draw;

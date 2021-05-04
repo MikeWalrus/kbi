@@ -135,3 +135,7 @@ vector<Player::Note> Player::get_current_notes() const
     return ret;
 }
 
+void Player::set_voices_limit(int voices_number)
+{
+    Player::voices_limit = voices_number;
+}

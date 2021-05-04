@@ -56,6 +56,7 @@ KbiWindow::KbiWindow(Player* p_player)
     kbi_checkbutton_control_voice_limit.set_hexpand(true);
     kbi_checkbutton_control_voice_limit.set_valign(Gtk::Align::CENTER);
     kbi_checkbutton_control_voice_limit.set_halign(Gtk::Align::FILL);
+    kbi_checkbutton_control_voice_limit.set_active(true);
     kbi_checkbutton_control_voice_limit.signal_toggled().connect(
             sigc::mem_fun(*this, &KbiWindow::on_checkbutton_control_voice_limit_toggled));
 
@@ -80,8 +81,11 @@ void KbiWindow::on_button_quit_clicked()
     hide();
 }
 
-void KbiWindow::on_checkbutton_control_voice_limit_toggled() {
-
+void KbiWindow::on_checkbutton_control_voice_limit_toggled()
+{
+    bool isMultitude = kbi_checkbutton_control_voice_limit.get_active();
+    int voices_number = isMultitude ? 0 : 1;
+    player->set_voices_limit(voices_number);
 }
 
 KbiWindow::~KbiWindow()

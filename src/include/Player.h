@@ -72,6 +72,8 @@ public:
 
     [[nodiscard]] vector<Note> get_current_notes() const;
 
+    void set_voices_limit(int voices_number);
+
 private:
     PaStream** stream;
     map<Note, Voice*> voices;

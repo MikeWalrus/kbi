@@ -27,6 +27,7 @@ KbiWindow::KbiWindow(Player* p_player)
     kbi_box1.set_size_request(KbiWindow::kbi_window_width, KbiWindow::kbi_window_height - 100);
     kbi_box1.set_expand(true);
     kbi_box1.append(kbi_draw);
+    kbi_box2.append(kbi_switch_control_voices_limit);
     kbi_box2.append(kbi_button_control_play_or_stop);
     kbi_box2.append(kbi_button_quit);
 
@@ -48,6 +49,16 @@ KbiWindow::KbiWindow(Player* p_player)
     kbi_button_quit.signal_clicked().connect(
             sigc::mem_fun(*this, &KbiWindow::on_button_quit_clicked));
 
+    //set kbi_switch_control_voices_limit
+    kbi_switch_control_voices_limit.set_margin(10);
+    kbi_switch_control_voices_limit.set_vexpand(false);
+    kbi_switch_control_voices_limit.set_hexpand(false);
+    kbi_switch_control_voices_limit.set_valign(Gtk::Align::CENTER);
+    kbi_switch_control_voices_limit.set_halign(Gtk::Align::FILL);
+    kbi_switch_control_voices_limit.set_active(true);
+    //kbi_switch_control_voices_limit.signal_state_flags_changed().connect(
+      //      sigc::mem_fun(*this, &KbiWindow::on_switch_control_voices_limit_clicked));
+
     setup();
 }
 
@@ -67,6 +78,14 @@ void KbiWindow::on_button_control_play_or_stop_clicked()
 void KbiWindow::on_button_quit_clicked()
 {
     hide();
+}
+
+void KbiWindow::on_switch_control_voices_limit_clicked()
+{
+    bool isMultitude = kbi_switch_control_voices_limit.get_active();
+    int voices_number;
+    voices_number = isMultitude ? 0 : 1;
+    player->set_voices_limit(voices_number);
 }
 
 KbiWindow::~KbiWindow()

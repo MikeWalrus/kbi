@@ -11,6 +11,7 @@ KbiWindow::KbiWindow(Player* p_player)
         kbi_box_top(Gtk::Orientation::VERTICAL, 0),
         kbi_box1(Gtk::Orientation::VERTICAL, 20),
         kbi_box2(Gtk::Orientation::HORIZONTAL, 20),
+        kbi_box_switch(Gtk::Orientation::HORIZONTAL, 0),
         kbi_button_control_play_or_stop("Play"),
         kbi_button_quit("Close"),
         player(p_player),
@@ -27,9 +28,11 @@ KbiWindow::KbiWindow(Player* p_player)
     kbi_box1.set_size_request(KbiWindow::kbi_window_width, KbiWindow::kbi_window_height - 100);
     kbi_box1.set_expand(true);
     kbi_box1.append(kbi_draw);
-    kbi_box2.append(kbi_switch_control_voices_limit);
+    kbi_box2.append(kbi_box_switch);
     kbi_box2.append(kbi_button_control_play_or_stop);
     kbi_box2.append(kbi_button_quit);
+    kbi_box_switch.append(*Gtk::make_managed<Gtk::Label>("Multitude voices:", 0));
+    kbi_box_switch.append(kbi_switch_control_voices_limit);
 
     //set kbi_button_control_play_or_stop
     kbi_button_control_play_or_stop.set_margin(10);

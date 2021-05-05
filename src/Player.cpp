@@ -9,10 +9,10 @@ double Voice::output()
 
 Voice::Voice()
 {
-    env.setAttack(5);
+    env.setAttack(0);
     env.setDecay(50);  // Needs to be at least 1
     env.setSustain(100);
-    env.setRelease(1000);
+    env.setRelease(3000);
 }
 
 void Voice::on(const Player::Note& note)
@@ -49,12 +49,12 @@ void Voice::set_adsr(int attack, int decay, int sustain, int release)
     env.setRelease(release);
 }
 
-maxiSample SamplerVoice::mother_of_samples; // TODO: change its name
+maxiSample SamplerVoice::guitar_sample;
 
 Player::Player(void** stream, double* output)
         :stream(stream), output(output)
 {
-    SamplerVoice::mother_of_samples.load("/home/mike/repos/kbi/src/resource/guitar.wav");
+    SamplerVoice::guitar_sample.load("/home/mike/repos/kbi/src/resource/guitar_e3.wav");
 }
 
 Player::~Player()
@@ -91,6 +91,7 @@ void setup()
 
 void Player::play()
 {
+    static double prev_out = 0;
     double mixed_out = 0;
     scoped_lock<mutex> lock(voices_guard);
     for (auto it = voices.begin(); it != voices.end();) {
@@ -108,8 +109,15 @@ void Player::play()
         mixed_out += voice_output;
         it++;
     }
+    if (abs(prev_out - mixed_out) > 0.1) {
+        // cout << prev_out - mixed_out << endl;
+        cout << "Before: " << prev_out - mixed_out << endl;
+        //mixed_out = (300*prev_out + mixed_out)/301;
+        cout << "After: " << prev_out - mixed_out << endl;
+    }
     output[0] = mixed_out;//left speaker
     output[1] = output[0];
+    prev_out = mixed_out;
 }
 
 // calculate the frequency of a note
@@ -131,13 +139,14 @@ void Player::note_on(const Note& note)
     }
     if (voices_limit && voices.size() + 1 > voices_limit) {
         auto existing_voice = voices.begin()->second;
+        existing_voice->off();
         existing_voice->on(note);
         voices.erase(voices.begin());
         voices[note] = existing_voice;
         return;
     }
     cout << "new voice" << endl;
-    auto voice_ptr = new Voice();
+    auto voice_ptr = new SamplerVoice();
     voice_ptr->on(note);
     voices[note] = voice_ptr;
 }
@@ -162,10 +171,14 @@ vector<Player::Note> Player::get_current_notes() const
 double SamplerVoice::output()
 {
     Voice::output();
-    return get_volume()
-            *sample.play(get_freq()/Player::noteToFrequency({'C', 3})*2./sample.getLength()*maxiSettings::sampleRate,
-                    sample.getLength()/2,
-                    sample.getLength());
+    auto length = sample.getLength();
+    auto begin = length*0.9;
+    auto end = length*0.95;
+    length = end - begin;
+    auto sample_output = sample.play(get_freq()/Player::noteToFrequency({'E', 3})/length*maxiSettings::sampleRate,
+            begin,
+            end);
+    return get_volume()*sample_output;
 }
 
 void SamplerVoice::off()
@@ -182,10 +195,3 @@ void SamplerVoice::on(const Player::Note& note)
         hasTriggered = true;
     }
 }
-
-SamplerVoice::SamplerVoice()
-        :sample(mother_of_samples)
-{
-    set_adsr(0, 1, 100, 1000);
-}
-

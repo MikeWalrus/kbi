@@ -115,7 +115,7 @@ public:
 
 class SamplerVoice : public Voice {
 public:
-    SamplerVoice();
+    SamplerVoice() = default;
 
     double output() override;
 
@@ -123,9 +123,9 @@ public:
 
     void on(const Player::Note& note) override;
 
-    static maxiSample mother_of_samples; // TODO: change its name
+    static maxiSample guitar_sample;
 private:
-    maxiSample sample;
+    maxiSample sample{guitar_sample};
     bool hasTriggered = false;
 };
 

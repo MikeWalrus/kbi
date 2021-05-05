@@ -56,8 +56,8 @@ KbiWindow::KbiWindow(Player* p_player)
     kbi_switch_control_voices_limit.set_valign(Gtk::Align::CENTER);
     kbi_switch_control_voices_limit.set_halign(Gtk::Align::FILL);
     kbi_switch_control_voices_limit.set_active(true);
-    //kbi_switch_control_voices_limit.signal_state_flags_changed().connect(
-      //      sigc::mem_fun(*this, &KbiWindow::on_switch_control_voices_limit_clicked));
+    kbi_switch_control_voices_limit.property_active().signal_changed().connect(
+            sigc::mem_fun(*this, &KbiWindow::on_switch_control_voices_limit_clicked));
 
     setup();
 }

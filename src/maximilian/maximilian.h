@@ -576,7 +576,7 @@ public:
 	double decay;
 	double sustain;
 	double release;
-	double amplitude;
+	double amplitude = 0;
 
     void setAttack(double attackMS);
     void setRelease(double releaseMS);
@@ -586,7 +586,7 @@ public:
 
 	long holdtime=1;
 	long holdcount;
-	int attackphase,decayphase,sustainphase,holdphase,releasephase;
+	int attackphase = 0,decayphase = 0,sustainphase,holdphase = 0,releasephase = 0;
 
 
 	// ------------------------------------------------

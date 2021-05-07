@@ -91,7 +91,7 @@ private:
     maxiOsc osc;
     maxiEnv env;
     double freq{};
-    double volume{};
+    double volume = 0;
 
 public:
     Voice();
@@ -115,7 +115,10 @@ public:
 
 class SamplerVoice : public Voice {
 public:
-    SamplerVoice() = default;
+    SamplerVoice()
+    {
+        set_adsr(0, 20, 100, 2000);
+    };
 
     double output() override;
 

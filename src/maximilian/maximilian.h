@@ -490,6 +490,9 @@ public:
 
   void normalise(double maxLevel = 0.99);  //0 < maxLevel < 1.0
   void autoTrim(float alpha = 0.3, float threshold = 6000, bool trimStart = true, bool trimEnd = true); //alpha of lag filter (lower == slower reaction), threshold to mark start and end, < 32767
+    bool load(istream& inFile, int channel=0);
+
+    bool read(istream& inFile);
 };
 
 

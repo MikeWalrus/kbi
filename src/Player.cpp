@@ -1,60 +1,29 @@
 #include "maximilian.h"
 #include "Player.h"
-
-double Voice::output()
-{
-    volume = env.adsr(1., env.trigger);
-    return osc.sinewave(freq)*volume;
-}
-
-Voice::Voice()
-{
-    env.setAttack(0);
-    env.setDecay(50);  // Needs to be at least 1
-    env.setSustain(100);
-    env.setRelease(3000);
-}
-
-void Voice::on(const Player::Note& note)
-{
-    env.trigger = 1;
-    freq = Player::noteToFrequency(note);
-}
-
-void Voice::off()
-{
-    env.trigger = 0;
-}
-
-bool Voice::shouldBeDeleted() const
-{
-    return (volume < 0.0001) && env.trigger == 0;
-}
-
-double Voice::get_freq() const
-{
-    return freq;
-}
-
-double Voice::get_volume() const
-{
-    return volume;
-}
-
-void Voice::set_adsr(int attack, int decay, int sustain, int release)
-{
-    env.setAttack(attack);
-    env.setDecay(decay);
-    env.setSustain(sustain);
-    env.setRelease(release);
-}
+#include "membuf.h"
+#include "gtkmm.h"
 
 maxiSample SamplerVoice::guitar_sample;
 
 Player::Player(void** stream, double* output)
         :stream(stream), output(output)
 {
-    SamplerVoice::guitar_sample.load("/home/mike/repos/kbi/src/resource/guitar_e3.wav");
+    load_samples();
+}
+
+void Player::load_samples()
+{
+    try {
+        auto sample_bytes = Gio::Resource::lookup_data_global("/kbi/guitar_e3.wav");
+        gsize size;
+        auto beg = static_cast<const char*>(sample_bytes->get_data(size));
+        membuf buf(beg, beg + size);
+        istream in(&buf);
+        SamplerVoice::guitar_sample.load(in);
+    }
+    catch (Gio::ResourceError& error) {
+        cout << error.what() << endl;
+    }
 }
 
 Player::~Player()
@@ -95,8 +64,7 @@ void Player::play()
     double mixed_out = 0;
     scoped_lock<mutex> lock(voices_guard);
     for (auto it = voices.begin(); it != voices.end();) {
-        Voice* voice;
-        voice = it->second;
+        auto voice = it->second;
         // Don't know why voice is sometimes NULL here!
         // Seems it can't be NULL now, since mutex locks this.
         auto voice_output = voice->output();
@@ -178,12 +146,4 @@ double SamplerVoice::output_something()
             begin,
             end);
     return sample_output;
-}
-
-void SamplerVoice::turn_on_something(int trigger)
-{
-    if (!hasTriggered) {
-        sample.trigger();
-        hasTriggered = true;
-    }
 }

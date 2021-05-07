@@ -9,7 +9,7 @@ include_directories(maximilian/libs)
 
 add_subdirectory(resource)
 
-add_executable(${PROJECT_NAME} main.cpp KbiWindow.cpp maximilian/maximilian.cpp Player.cpp maximilian/libs/maxiSynths.cpp Ctrl.cpp NotesDrawingArea.cpp)
+add_executable(${PROJECT_NAME} main.cpp KbiWindow.cpp maximilian/maximilian.cpp Player.cpp maximilian/libs/maxiSynths.cpp Ctrl.cpp NotesDrawingArea.cpp resource/kbi.gresourse.c)
 
 set_source_files_properties(
         resource/${GRESOURCE_C}

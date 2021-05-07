@@ -625,6 +625,86 @@ bool maxiSample::load(string fileName, int channel) {
 	return read();
 }
 
+bool maxiSample::load(istream& inFile, int channel) {
+    readChannel = channel;
+    return read(inFile);
+}
+
+bool maxiSample::read(istream& inFile)
+{
+    bool result = true;
+    int myDataSize;
+    if (result) {
+        bool datafound = false;
+        inFile.seekg(4, ios::beg);
+        inFile.read( (char*) &myChunkSize, 4 ); // read the ChunkSize
+
+        inFile.seekg(16, ios::beg);
+        inFile.read( (char*) &mySubChunk1Size, 4 ); // read the SubChunk1Size
+
+        //inFile.seekg(20, ios::beg);
+        inFile.read( (char*) &myFormat, sizeof(short) ); // read the file format.  This should be 1 for PCM
+
+        //inFile.seekg(22, ios::beg);
+        inFile.read( (char*) &myChannels, sizeof(short) ); // read the # of channels (1 or 2)
+
+        //inFile.seekg(24, ios::beg);
+        inFile.read( (char*) &mySampleRate, sizeof(int) ); // read the samplerate
+
+        //inFile.seekg(28, ios::beg);
+        inFile.read( (char*) &myByteRate, sizeof(int) ); // read the byterate
+
+        //inFile.seekg(32, ios::beg);
+        inFile.read( (char*) &myBlockAlign, sizeof(short) ); // read the blockalign
+
+        //inFile.seekg(34, ios::beg);
+        inFile.read( (char*) &myBitsPerSample, sizeof(short) ); // read the bitspersample
+
+        //ignore any extra chunks
+        char chunkID[5]="";
+        chunkID[4] = 0;
+        int filePos = 20 + mySubChunk1Size;
+        while(!datafound && !inFile.eof()) {
+            inFile.seekg(filePos, ios::beg);
+            inFile.read((char*) &chunkID, sizeof(char) * 4);
+            inFile.seekg(filePos + 4, ios::beg);
+            inFile.read( (char*) &myDataSize, sizeof(int) ); // read the size of the data
+            filePos += 8;
+            if (strcmp(chunkID,"data") == 0) {
+                datafound = true;
+            }else{
+                filePos += myDataSize;
+            }
+        }
+
+        // read the data chunk
+        vector<short> shortAmps;
+        shortAmps.resize(myDataSize/2);
+        inFile.seekg(filePos, ios::beg);
+        inFile.read((char*)shortAmps.data(), myDataSize);
+
+        if (myChannels>1) {
+            int position=0;
+            int channel=readChannel*2;
+            for (int i=channel;i<myDataSize+6;i+=(myChannels*2)) {
+                shortAmps[position]=shortAmps[i];
+                position++;
+            }
+        }
+        amplitudes.resize(shortAmps.size());
+        for(int i=0; i < shortAmps.size(); i++) {
+            amplitudes[i] = shortAmps[i] / 32767.0;
+        }
+        position = amplitudes.size();
+        cout << "Ch: " << myChannels << ", len: " << amplitudes.size() << endl;
+
+    }else {
+        //        cout << "ERROR: Could not load sample: " <<myPath << endl; //This line seems to be hated by windows
+        printf("ERROR: Could not load sample.");
+
+    }
+    return result; // this should probably be something more descriptive
+}
 //This is the main read function.
 bool maxiSample::read()
 {
@@ -1113,9 +1193,6 @@ void maxiSample::autoTrim(float alpha, float threshold, bool trimStart, bool tri
         }
     }
 }
-
-
-
 
 
 /* OK this compressor and gate are now ready to use. The envelopes, like all the envelopes in this recent update, use stupid algorithms for

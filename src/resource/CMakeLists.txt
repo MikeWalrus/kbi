@@ -1,7 +1,7 @@
 # Step 1:
 find_program(GLIB_COMPILE_RESOURCES NAMES glib-compile-resources REQUIRED)
 
-set(GRESOURCE_C   kbi.gresourse.c)
+set(GRESOURCE_C kbi.gresourse.c)
 set(GRESOURCE_XML kbi.gresourse.xml)
 
 # Step 2:
@@ -16,7 +16,7 @@ add_custom_command(
         VERBATIM
         MAIN_DEPENDENCY ${GRESOURCE_XML}
         DEPENDS
-        window.ui
+        window.ui guitar_e3.wav
 )
 
 # Step 3:

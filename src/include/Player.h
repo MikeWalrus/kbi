@@ -84,18 +84,21 @@ private:
 
     void start() const;
 
+    static void load_samples();
 };
 
-class VoiceBase {
+class Voice {
 private:
     maxiEnv env;
+    double volume{};
     double freq{};
 
 public:
     typedef array<int, 4> Adsr;
 
-    explicit VoiceBase(Adsr adsr)
+    explicit Voice(Adsr adsr)
     {
+        env.trigger = 0;
         env.setAttack(adsr[0]);
         env.setDecay(adsr[1]);
         env.setSustain(adsr[2]);
@@ -106,16 +109,19 @@ public:
 
     double output()
     {
-        return env.adsr(1., env.trigger)*output_something();
+        volume = env.adsr(1., env.trigger);
+        return volume*output_something();
     }
 
-    virtual void turn_on_something(int trigger) = 0;
+    virtual void turn_on_something() { }
 
     void on(const Player::Note& note)
     {
-        env.trigger = 1;
-        freq = Player::noteToFrequency(note);
-        turn_on_something(env.trigger);
+        if (!env.trigger) {
+            env.trigger = 1;
+            freq = Player::noteToFrequency(note);
+            turn_on_something();
+        }
     }
 
     void off()
@@ -123,55 +129,47 @@ public:
         env.trigger = 0;
     }
 
-    double get_freq() const
+    [[nodiscard]] bool shouldBeDeleted() const
+    {
+        return (volume < 0.0001) && env.trigger == 0;
+    }
+
+    [[nodiscard]] double get_freq() const
     {
         return freq;
     }
 };
 
-class Voice {
+class SynthVoice : public Voice {
 private:
     maxiOsc osc;
-    maxiEnv env;
-    double freq{};
-    double volume = 0;
-
 public:
-    Voice();
+    SynthVoice()
+            :Voice({10, 50, 100, 1000}) { }
 
-    virtual double output();
-
-    virtual void off();
-
-    virtual void on(const Player::Note& note);
-
-    [[nodiscard]] bool shouldBeDeleted() const;
-
-    void set_adsr(int attack, int decay, int sustain, int release);
-
-protected:
-    [[nodiscard]] double get_freq() const;
-
-public:
-    [[nodiscard]] double get_volume() const;
+    double output_something() override
+    {
+        return 0.1*osc.sinewave(get_freq());
+    }
 };
 
-class SamplerVoice : public VoiceBase {
+class SamplerVoice : public Voice {
 public:
     SamplerVoice()
-            :VoiceBase({10, 10, 100, 1000})
+            :Voice({10, 10, 100, 4000})
     {
     };
 
     double output_something() override;
 
-
-    void turn_on_something(int trigger) override;
+    void turn_on_something() override
+    {
+        sample.trigger();
+    }
 
     static maxiSample guitar_sample;
 private:
     maxiSample sample{guitar_sample};
-    bool hasTriggered = false;
 };
 
 #endif //KBI_PLAYER_H

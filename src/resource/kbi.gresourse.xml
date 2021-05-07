@@ -2,5 +2,6 @@
 <gresources>
     <gresource prefix="/kbi">
         <file preprocess="xml-stripblanks">window.ui</file>
+        <file>guitar_e3.wav</file>
     </gresource>
 </gresources>

@@ -31,8 +31,10 @@ KbiWindow::KbiWindow(Player* p_player)
     kbi_box2.append(kbi_box_switch);
     kbi_box2.append(kbi_button_control_play_or_stop);
     kbi_box2.append(kbi_button_quit);
-    kbi_box_switch.append(*Gtk::make_managed<Gtk::Label>("Multitude voices:", 0));
+    kbi_box_switch.append(*Gtk::make_managed<Gtk::Label>("Polyphonic", 0));
     kbi_box_switch.append(kbi_switch_control_voices_limit);
+    kbi_box_switch.set_margin_start(10);
+    kbi_box_switch.set_margin_end(10);
 
     //set kbi_button_control_play_or_stop
     kbi_button_control_play_or_stop.set_margin(10);
@@ -85,9 +87,9 @@ void KbiWindow::on_button_quit_clicked()
 
 void KbiWindow::on_switch_control_voices_limit_clicked()
 {
-    bool isMultitude = kbi_switch_control_voices_limit.get_active();
+    bool isPolyphonic = kbi_switch_control_voices_limit.get_active();
     int voices_number;
-    voices_number = isMultitude ? 0 : 1;
+    voices_number = isPolyphonic ? 0 : 1;
     player->set_voices_limit(voices_number);
 }
 

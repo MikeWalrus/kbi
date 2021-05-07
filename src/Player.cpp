@@ -168,9 +168,8 @@ vector<Player::Note> Player::get_current_notes() const
     return ret;
 }
 
-double SamplerVoice::output()
+double SamplerVoice::output_something()
 {
-    Voice::output();
     auto length = sample.getLength();
     auto begin = length*0.9;
     auto end = length*0.95;
@@ -178,18 +177,11 @@ double SamplerVoice::output()
     auto sample_output = sample.play(get_freq()/Player::noteToFrequency({'E', 3})/length*maxiSettings::sampleRate,
             begin,
             end);
-    return get_volume()*sample_output;
+    return sample_output;
 }
 
-void SamplerVoice::off()
+void SamplerVoice::turn_on_something(int trigger)
 {
-    Voice::off();
-    hasTriggered = false;
-}
-
-void SamplerVoice::on(const Player::Note& note)
-{
-    Voice::on(note);
     if (!hasTriggered) {
         sample.trigger();
         hasTriggered = true;

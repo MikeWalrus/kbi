@@ -17,8 +17,8 @@ class Voice;
 class Player {
 public:
     struct Note {
-        int letter;
-        int number;
+        int letter{};
+        int number{};
         bool sharp = false;
 
         bool operator==(const Note& note) const
@@ -86,6 +86,49 @@ private:
 
 };
 
+class VoiceBase {
+private:
+    maxiEnv env;
+    double freq{};
+
+public:
+    typedef array<int, 4> Adsr;
+
+    explicit VoiceBase(Adsr adsr)
+    {
+        env.setAttack(adsr[0]);
+        env.setDecay(adsr[1]);
+        env.setSustain(adsr[2]);
+        env.setRelease(adsr[3]);
+    }
+
+    virtual double output_something() = 0;
+
+    double output()
+    {
+        return env.adsr(1., env.trigger)*output_something();
+    }
+
+    virtual void turn_on_something(int trigger) = 0;
+
+    void on(const Player::Note& note)
+    {
+        env.trigger = 1;
+        freq = Player::noteToFrequency(note);
+        turn_on_something(env.trigger);
+    }
+
+    void off()
+    {
+        env.trigger = 0;
+    }
+
+    double get_freq() const
+    {
+        return freq;
+    }
+};
+
 class Voice {
 private:
     maxiOsc osc;
@@ -110,21 +153,20 @@ protected:
     [[nodiscard]] double get_freq() const;
 
 public:
-    double get_volume() const;
+    [[nodiscard]] double get_volume() const;
 };
 
-class SamplerVoice : public Voice {
+class SamplerVoice : public VoiceBase {
 public:
     SamplerVoice()
+            :VoiceBase({10, 10, 100, 1000})
     {
-        set_adsr(0, 20, 100, 2000);
     };
 
-    double output() override;
+    double output_something() override;
 
-    void off() override;
 
-    void on(const Player::Note& note) override;
+    void turn_on_something(int trigger) override;
 
     static maxiSample guitar_sample;
 private:

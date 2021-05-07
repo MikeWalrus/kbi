@@ -68,6 +68,8 @@ public:
 
     void note_off(const Note& note);
 
+    void set_voices_limit(int voices_number);
+
     static double noteToFrequency(const Note& note);
 
     [[nodiscard]] vector<Note> get_current_notes() const;

@@ -145,5 +145,13 @@ double SamplerVoice::output_something()
     auto sample_output = sample.play(get_freq()/Player::noteToFrequency({'E', 3})/length*maxiSettings::sampleRate,
             begin,
             end);
+    // In order to eliminate the 'audio pops', we should wait until its output reaches 0
+    // before going back to the beginning.
+    if (shouldTurnOn) {
+        if (abs(sample_output) < 0.01) {
+            sample.trigger();
+            shouldTurnOn = false;
+        }
+    }
     return sample_output;
 }

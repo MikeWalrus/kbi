@@ -164,12 +164,13 @@ public:
 
     void turn_on_something() override
     {
-        sample.trigger();
+        shouldTurnOn = true;
     }
 
     static maxiSample guitar_sample;
 private:
     maxiSample sample{guitar_sample};
+    bool shouldTurnOn = false;
 };
 
 #endif //KBI_PLAYER_H

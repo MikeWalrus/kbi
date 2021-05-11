@@ -15,8 +15,10 @@ KbiWindow::KbiWindow(Player* p_player)
         kbi_button_quit("Close"),
         player(p_player),
         kbi_draw(p_player),
-        controller(controllers.at("default")(p_player))
+        controller(controllers.at("default")(p_player)),
+        settings(Gtk::Settings::get_default())
 {
+    settings->property_gtk_application_prefer_dark_theme().set_value(TRUE);
 
     //set child widgets
     set_child(kbi_box_top);

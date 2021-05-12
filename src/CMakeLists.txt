@@ -7,9 +7,31 @@ include_directories(include)
 include_directories(maximilian)
 include_directories(maximilian/libs)
 
-add_subdirectory(resource)
+find_program(GLIB_COMPILE_RESOURCES NAMES glib-compile-resources REQUIRED)
 
-add_executable(${PROJECT_NAME} main.cpp KbiWindow.cpp maximilian/maximilian.cpp Player.cpp maximilian/libs/maxiSynths.cpp Ctrl.cpp NotesDrawingArea.cpp)
+set(GRESOURCE_C ${CMAKE_CURRENT_SOURCE_DIR}/resource/kbi.gresourse.c)
+set(GRESOURCE_XML ${CMAKE_CURRENT_SOURCE_DIR}/resource/kbi.gresourse.xml)
+
+add_custom_command(
+        OUTPUT ${GRESOURCE_C}
+        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/resource
+        COMMAND ${GLIB_COMPILE_RESOURCES}
+        ARGS
+        --target=${GRESOURCE_C}
+        --generate-source
+        ${GRESOURCE_XML}
+        VERBATIM
+        MAIN_DEPENDENCY ${GRESOURCE_XML}
+        DEPENDS
+        resource/window.ui resource/guitar_e3.wav resource/violin_a4.wav
+)
+
+add_custom_target(
+        kbi-resource
+        DEPENDS ${GRESOURCE_C}
+)
+
+add_executable(${PROJECT_NAME} main.cpp KbiWindow.cpp maximilian/maximilian.cpp Player.cpp Ctrl.cpp NotesDrawingArea.cpp ${GRESOURCE_C})
 
 set_source_files_properties(
         resource/${GRESOURCE_C}

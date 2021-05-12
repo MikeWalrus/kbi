@@ -12,16 +12,6 @@ Ctrl::Ctrl(Player* p_player)
     Ctrl::ctrl_key->signal_key_released().connect(sigc::mem_fun(*this, &Ctrl::on_key_released), false);
 }
 
-// Helper function that demonstrate how to find out current notes.
-void Controller::print_current_notes()
-{
-    auto current_notes = get_player()->get_current_notes();
-    for (const auto& note : current_notes) {
-        cout << note << " ";
-    }
-    cout << endl;
-}
-
 bool Controller::hasGotNote(guint keyVal, const Gdk::ModifierType& state, Player::Note& note)
 {
     int key_letter = keyVal - GDK_KEY_a + 'a';
@@ -49,8 +39,6 @@ bool Controller::hasGotNote(guint keyVal, const Gdk::ModifierType& state, Player
             ++note.number;
         if ((state & Gdk::ModifierType::CONTROL_MASK) == Gdk::ModifierType::CONTROL_MASK)
             --note.number;
-        // this shows how to find out what notes the Player is playing
-        print_current_notes();
         return true;
     }
     return false;

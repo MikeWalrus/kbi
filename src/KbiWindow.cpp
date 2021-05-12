@@ -11,6 +11,7 @@ KbiWindow::KbiWindow(Player* p_player)
         kbi_box_top(Gtk::Orientation::VERTICAL, 0),
         kbi_box1(Gtk::Orientation::VERTICAL, 20),
         kbi_box2(Gtk::Orientation::HORIZONTAL, 20),
+        kbi_box_switch(Gtk::Orientation::HORIZONTAL, 0),
         kbi_button_control_play_or_stop("Play"),
         kbi_button_quit("Close"),
         player(p_player),
@@ -29,8 +30,13 @@ KbiWindow::KbiWindow(Player* p_player)
     kbi_box1.set_size_request(KbiWindow::kbi_window_width, KbiWindow::kbi_window_height - 100);
     kbi_box1.set_expand(true);
     kbi_box1.append(kbi_draw);
+    kbi_box2.append(kbi_box_switch);
     kbi_box2.append(kbi_button_control_play_or_stop);
     kbi_box2.append(kbi_button_quit);
+    kbi_box_switch.append(*Gtk::make_managed<Gtk::Label>("Polyphonic", 0));
+    kbi_box_switch.append(kbi_switch_control_voices_limit);
+    kbi_box_switch.set_margin_start(10);
+    kbi_box_switch.set_margin_end(10);
 
     //set kbi_button_control_play_or_stop
     kbi_button_control_play_or_stop.set_margin(10);
@@ -49,6 +55,16 @@ KbiWindow::KbiWindow(Player* p_player)
     kbi_button_quit.set_halign(Gtk::Align::FILL);
     kbi_button_quit.signal_clicked().connect(
             sigc::mem_fun(*this, &KbiWindow::on_button_quit_clicked));
+
+    //set kbi_switch_control_voices_limit
+    kbi_switch_control_voices_limit.set_margin(10);
+    kbi_switch_control_voices_limit.set_vexpand(false);
+    kbi_switch_control_voices_limit.set_hexpand(false);
+    kbi_switch_control_voices_limit.set_valign(Gtk::Align::CENTER);
+    kbi_switch_control_voices_limit.set_halign(Gtk::Align::FILL);
+    kbi_switch_control_voices_limit.set_active(true);
+    kbi_switch_control_voices_limit.property_active().signal_changed().connect(
+            sigc::mem_fun(*this, &KbiWindow::on_switch_control_voices_limit_clicked));
 
     setup();
 }
@@ -69,6 +85,14 @@ void KbiWindow::on_button_control_play_or_stop_clicked()
 void KbiWindow::on_button_quit_clicked()
 {
     hide();
+}
+
+void KbiWindow::on_switch_control_voices_limit_clicked()
+{
+    bool isPolyphonic = kbi_switch_control_voices_limit.get_active();
+    int voices_number;
+    voices_number = isPolyphonic ? 0 : 1;
+    player->set_voices_limit(voices_number);
 }
 
 KbiWindow::~KbiWindow()

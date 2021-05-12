@@ -155,3 +155,8 @@ double SamplerVoice::output_something()
     }
     return sample_output;
 }
+void Player::set_voices_limit(int voices_number)
+{
+    Player::voices_limit = voices_number;
+}
+

@@ -572,18 +572,18 @@ int maxiSample::setSampleFromOggBlob(vector<unsigned char> &oggBlob, int channel
     printf("\n");
     myChannels=(short)channelx;
     mySampleRate=44100;
-    amplitudes.resize(myDataSize);
+    amplitudes->resize(myDataSize);
 
     if (myChannels>1) {
         int position=0;
         int channel=readChannel;
         for (int i=channel;i<myDataSize*2;i+=myChannels) {
-            amplitudes[position]=temp[i]/32767.0;
+            (*amplitudes)[position]=temp[i]/32767.0;
             position++;
         }
     }else{
         for(int i=0; i < myDataSize; i++) {
-            amplitudes[i] = temp[i] / 32767.0;
+            (*amplitudes)[i] = temp[i] / 32767.0;
         }
     }
     free(temp);
@@ -596,7 +596,7 @@ int maxiSample::setSampleFromOggBlob(vector<unsigned char> &oggBlob, int channel
 // -------------------------
 // js bits
 bool maxiSample::isReady(){
-	if(amplitudes.size() > 0){
+	if(amplitudes->size() > 0){
 		return true;
 	}
 	return false;
@@ -691,12 +691,12 @@ bool maxiSample::read(istream& inFile)
                 position++;
             }
         }
-        amplitudes.resize(shortAmps.size());
+        amplitudes->resize(shortAmps.size());
         for(int i=0; i < shortAmps.size(); i++) {
-            amplitudes[i] = shortAmps[i] / 32767.0;
+            (*amplitudes)[i] = shortAmps[i] / 32767.0;
         }
-        position = amplitudes.size();
-        cout << "Ch: " << myChannels << ", len: " << amplitudes.size() << endl;
+        position = amplitudes->size();
+        cout << "Ch: " << myChannels << ", len: " << amplitudes->size() << endl;
 
     }else {
         //        cout << "ERROR: Could not load sample: " <<myPath << endl; //This line seems to be hated by windows
@@ -771,12 +771,12 @@ bool maxiSample::read()
                 position++;
             }
         }
-        amplitudes.resize(shortAmps.size());
+        amplitudes->resize(shortAmps.size());
         for(int i=0; i < shortAmps.size(); i++) {
-            amplitudes[i] = shortAmps[i] / 32767.0;
+            (*amplitudes)[i] = shortAmps[i] / 32767.0;
         }
-        position = amplitudes.size();
-        cout << "Ch: " << myChannels << ", len: " << amplitudes.size() << endl;
+        position = amplitudes->size();
+        cout << "Ch: " << myChannels << ", len: " << amplitudes->size() << endl;
 
     }else {
         //        cout << "ERROR: Could not load sample: " <<myPath << endl; //This line seems to be hated by windows
@@ -796,9 +796,9 @@ bool maxiSample::save(string filename)
 {
     fstream myFile (filename.c_str(), ios::out | ios::binary);
 
-    vector<short> shortAmps(amplitudes.size());
+    vector<short> shortAmps(amplitudes->size());
     for(int i=0; i < shortAmps.size(); i++) {
-        shortAmps[i] = static_cast<short>(round(amplitudes[i] * 32767.0));
+        shortAmps[i] = static_cast<short>(round((*amplitudes)[i] * 32767.0));
     }
     // write the wav file per the wav file format
     myFile.seekp (0, ios::beg);
@@ -828,13 +828,13 @@ bool maxiSample::save(string filename)
 //This plays back at the correct speed. Always loops.
 double maxiSample::play() {
     position++;
-    if ((long) position >= amplitudes.size()) position=0;
-    output = amplitudes[(long)position];
+    if ((long) position >= amplitudes->size()) position=0;
+    output = (*amplitudes)[(long)position];
     return output;
 }
 
 void maxiSample::setPosition(double newPos) {
-	position = maxiMap::clamp(newPos, 0.0, 1.0) * amplitudes.size();
+	position = maxiMap::clamp(newPos, 0.0, 1.0) * amplitudes->size();
 }
 
 
@@ -854,7 +854,7 @@ double maxiSample::play(double frequency, double start, double end) {
 //This allows you to say how often a second you want a specific chunk of audio to play
 double maxiSample::play(double frequency, double start, double end, double &pos) {
 	double remainder;
-	if (end>=amplitudes.size()) end=amplitudes.size()-1;
+	if (end>=amplitudes->size()) end=amplitudes->size()-1;
 	long a,b;
 
 	if (frequency >0.) {
@@ -866,22 +866,22 @@ double maxiSample::play(double frequency, double start, double end, double &pos)
 		pos += ((end-start)/((maxiSettings::sampleRate)/(frequency*chandiv)));
 		remainder = pos - floor(pos);
 		long posl = floor(pos);
-		if (posl+1<amplitudes.size()) {
+		if (posl+1<amplitudes->size()) {
 			a=posl+1;
 
 		}
 		else {
 			a=posl-1;
 		}
-		if (posl+2<amplitudes.size()) {
+		if (posl+2<amplitudes->size()) {
 			b=posl+2;
 		}
 		else {
-			b=amplitudes.size()-1;
+			b=amplitudes->size()-1;
 		}
 
-		output = ((1-remainder) * amplitudes[a] +
-						   remainder * amplitudes[b]);//linear interpolation
+		output = ((1-remainder) * (*amplitudes)[a] +
+						   remainder * (*amplitudes)[b]);//linear interpolation
 	} else {
 		frequency*=-1.;
 		if ( pos <= start ) pos = end;
@@ -900,8 +900,8 @@ double maxiSample::play(double frequency, double start, double end, double &pos)
 		else {
 			b=0;
 		}
-		output = ((-1-remainder) * amplitudes[a] +
-						   remainder * amplitudes[b]);//linear interpolation
+		output = ((-1-remainder) * (*amplitudes)[a] +
+						   remainder * (*amplitudes)[b]);//linear interpolation
 
 	}
 
@@ -921,26 +921,26 @@ double maxiSample::play4(double frequency, double start, double end) {
 		position += ((end-start)/(maxiSettings::sampleRate/(frequency*chandiv)));
 		remainder = position - floor(position);
 		if (position>0) {
-			a=amplitudes[(int)(floor(position))-1];
+			a=(*amplitudes)[(int)(floor(position))-1];
 
 		} else {
-			a=amplitudes[0];
+			a=(*amplitudes)[0];
 
 		}
 
-		b=amplitudes[(long) position];
+		b=(*amplitudes)[(long) position];
 		if (position<end-2) {
-			c=amplitudes[(long) position+1];
+			c=(*amplitudes)[(long) position+1];
 
 		} else {
-			c=amplitudes[0];
+			c=(*amplitudes)[0];
 
 		}
 		if (position<end-3) {
-			d=amplitudes[(long) position+2];
+			d=(*amplitudes)[(long) position+2];
 
 		} else {
-			d=amplitudes[0];
+			d=(*amplitudes)[0];
 		}
 		a1 = 0.5f * (c - a);
 		a2 = a - 2.5 * b + 2.f * c - 0.5f * d;
@@ -953,26 +953,26 @@ double maxiSample::play4(double frequency, double start, double end) {
 		position -= ((end-start)/(maxiSettings::sampleRate/(frequency*chandiv)));
 		remainder = position - floor(position);
 		if (position>start && position < end-1) {
-			a=amplitudes[(long) position+1];
+			a=(*amplitudes)[(long) position+1];
 
 		} else {
-			a=amplitudes[0];
+			a=(*amplitudes)[0];
 
 		}
 
-		b=amplitudes[(long) position];
+		b=(*amplitudes)[(long) position];
 		if (position>start) {
-			c=amplitudes[(long) position-1];
+			c=(*amplitudes)[(long) position-1];
 
 		} else {
-			c=amplitudes[0];
+			c=(*amplitudes)[0];
 
 		}
 		if (position>start+1) {
-			d=amplitudes[(long) position-2];
+			d=(*amplitudes)[(long) position-2];
 
 		} else {
-			d=amplitudes[0];
+			d=(*amplitudes)[0];
 		}
 		a1 = 0.5f * (c - a);
 		a2 = a - 2.5 * b + 2.f * c - 0.5f * d;
@@ -988,17 +988,17 @@ double maxiSample::play4(double frequency, double start, double end) {
 //start end and points are between 0 and 1
 double maxiSample::playLoop(double start, double end) {
 	position++;
-	if (position < amplitudes.size() * start) position = amplitudes.size() * start;
-	if ((long) position >= amplitudes.size() * end) position = amplitudes.size() * start;
-	output =  amplitudes[(long)position];
+	if (position < amplitudes->size() * start) position = amplitudes->size() * start;
+	if ((long) position >= amplitudes->size() * end) position = amplitudes->size() * start;
+	output =  (*amplitudes)[(long)position];
 	return output;
 }
 
 double maxiSample::playUntil(double end) {
 	position++;
 	if (end > 1.0) end = 1.0;
-	if ((long) position<amplitudes.size() * end)
-		output =  amplitudes[(long)position];
+	if ((long) position<amplitudes->size() * end)
+		output =  (*amplitudes)[(long)position];
 	else {
 		output=0;
 	}
@@ -1008,8 +1008,8 @@ double maxiSample::playUntil(double end) {
 
 //This plays back at the correct speed. Only plays once. To retrigger, you have to manually reset the position
 double maxiSample::playOnce() {
-	if ((long) position<amplitudes.size())
-		output = amplitudes[(long)position];
+	if ((long) position<amplitudes->size())
+		output = (*amplitudes)[(long)position];
 	else {
 		output=0;
 	}
@@ -1035,7 +1035,7 @@ double maxiSample::playOnZX(double trig, double speed) {
 double maxiSample::playOnZX(double trig, double speed, double offset) {
 	if (zxTrig.onZX(trig)) {
 		trigger();
-		position = offset * amplitudes.size();
+		position = offset * amplitudes->size();
 	}
   return playOnce(speed);
 }
@@ -1043,7 +1043,7 @@ double maxiSample::playOnZX(double trig, double speed, double offset) {
 double maxiSample::playOnZX(double trig, double speed, double offset, double length) {
 	if (zxTrig.onZX(trig)) {
 		trigger();
-		position = offset * amplitudes.size();
+		position = offset * amplitudes->size();
 	}
   return playUntil(offset+length, speed);
 }
@@ -1061,8 +1061,8 @@ double maxiSample::loopSetPosOnZX(double trig, double pos) {
 //Same as above but takes a speed value specified as a ratio, with 1.0 as original speed
 double maxiSample::playOnce(double speed) {
 	double remainder = position - (long) position;
-	if ((long) position<amplitudes.size())
-		output = ((1-remainder) * amplitudes[1+ (long) position] + remainder * amplitudes[2+(long) position]);//linear interpolation
+	if ((long) position<amplitudes->size())
+		output = ((1-remainder) * (*amplitudes)[1+ (long) position] + remainder * (*amplitudes)[2+(long) position]);//linear interpolation
 	else
 		output=0;
 
@@ -1073,8 +1073,8 @@ double maxiSample::playOnce(double speed) {
 double maxiSample::playUntil(double end, double speed) {
 	double remainder = position - (long) position;
 	if (end > 1.0) end = 1.0;
-	if ((long) position<amplitudes.size() * end)
-		output = ((1-remainder) * amplitudes[1+ (long) position] + remainder * amplitudes[2+(long) position]);//linear interpolation
+	if ((long) position<amplitudes->size() * end)
+		output = ((1-remainder) * (*amplitudes)[1+ (long) position] + remainder * (*amplitudes)[2+(long) position]);//linear interpolation
 	else
 		output=0;
 
@@ -1090,26 +1090,26 @@ double maxiSample::play(double speed) {
 	position=position+((speed*chandiv)/(maxiSettings::sampleRate/mySampleRate));
 	if (speed >=0) {
 
-		if ((long) position>=amplitudes.size()-1) position=1;
+		if ((long) position>=amplitudes->size()-1) position=1;
 		remainder = position - floor(position);
-		if (position+1<amplitudes.size()) {
+		if (position+1<amplitudes->size()) {
 			a=position+1;
 
 		}
 		else {
-			a=amplitudes.size()-1;
+			a=amplitudes->size()-1;
 		}
-		if (position+2<amplitudes.size())
+		if (position+2<amplitudes->size())
 		{
 			b=position+2;
 		}
 		else {
-			b=amplitudes.size()-1;
+			b=amplitudes->size()-1;
 		}
 
-		output = ((1-remainder) * amplitudes[a] + remainder * amplitudes[b]);//linear interpolation
+		output = ((1-remainder) * (*amplitudes)[a] + remainder * (*amplitudes)[b]);//linear interpolation
 	} else {
-		if ((long) position<0) position=amplitudes.size();
+		if ((long) position<0) position=amplitudes->size();
 		remainder = position - floor(position);
 		if (position-1>=0) {
 			a=position-1;
@@ -1124,7 +1124,7 @@ double maxiSample::play(double speed) {
 		else {
 			b=0;
 		}
-		output = ((-1-remainder) * amplitudes[a] + remainder * amplitudes[b]);//linear interpolation
+		output = ((-1-remainder) * (*amplitudes)[a] + remainder * (*amplitudes)[b]);//linear interpolation
 	}
 	return(output);
 }
@@ -1136,14 +1136,14 @@ void maxiSample::reset() {
 
 void maxiSample::normalise(double maxLevel) {
 	double maxValue = 0;
-	for(int i=0; i < amplitudes.size(); i++) {
-		if (abs(amplitudes[i]) > maxValue) {
-			maxValue = abs(amplitudes[i]);
+	for(int i=0; i < amplitudes->size(); i++) {
+		if (abs((*amplitudes)[i]) > maxValue) {
+			maxValue = abs((*amplitudes)[i]);
 		}
 	}
 	float scale = maxLevel / maxValue;
-	for(int i=0; i < amplitudes.size(); i++) {
-		amplitudes[i] = round(scale * amplitudes[i]);
+	for(int i=0; i < amplitudes->size(); i++) {
+		(*amplitudes)[i] = round(scale * (*amplitudes)[i]);
 	}
 }
 
@@ -1152,8 +1152,8 @@ void maxiSample::autoTrim(float alpha, float threshold, bool trimStart, bool tri
     int startMarker=0;
     if(trimStart) {
         maxiLagExp<double> startLag(alpha, 0);
-        while(startMarker < amplitudes.size()) {
-            startLag.addSample(abs(amplitudes[startMarker]));
+        while(startMarker < amplitudes->size()) {
+            startLag.addSample(abs((*amplitudes)[startMarker]));
             if (startLag.value() > threshold) {
                 break;
             }
@@ -1161,11 +1161,11 @@ void maxiSample::autoTrim(float alpha, float threshold, bool trimStart, bool tri
         }
     }
 
-    int endMarker = amplitudes.size()-1;
+    int endMarker = amplitudes->size()-1;
     if(trimEnd) {
         maxiLagExp<float> endLag(alpha, 0);
         while(endMarker > 0) {
-            endLag.addSample(abs(amplitudes[endMarker]));
+            endLag.addSample(abs((*amplitudes)[endMarker]));
             if (endLag.value() > threshold) {
                 break;
             }
@@ -1179,17 +1179,17 @@ void maxiSample::autoTrim(float alpha, float threshold, bool trimStart, bool tri
     if (newLength > 0) {
         vector<double> newAmps(newLength);
         for(int i=0; i < newLength; i++) {
-            newAmps[i] = amplitudes[i+startMarker];
+            newAmps[i] = (*amplitudes)[i+startMarker];
         }
-        amplitudes = newAmps;
+        *amplitudes = newAmps;
         position=0;
         recordPosition=0;
         //envelope the start
-        int fadeSize=min((size_t)100, amplitudes.size());
+        int fadeSize=min((size_t)100, amplitudes->size());
         for(int i=0; i < fadeSize; i++) {
             double factor = i / (double) fadeSize;
-            amplitudes[i] = round(amplitudes[i] * factor);
-            amplitudes[amplitudes.size() - 1 - i] = round(amplitudes[amplitudes.size() - 1 - i] * factor);
+            (*amplitudes)[i] = round((*amplitudes)[i] * factor);
+            (*amplitudes)[amplitudes->size() - 1 - i] = round((*amplitudes)[amplitudes->size() - 1 - i] * factor);
         }
     }
 }

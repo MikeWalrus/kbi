@@ -8,11 +8,15 @@
 #include <map>
 #include <maxiSynths.h>
 #include <mutex>
+#include <memory>
+#include <utility>
 #include "portaudio.h"
 #include "maximilian.h"
 #include "utilities.h"
 
 class Voice;
+
+class Instrument;
 
 class Player {
 public:
@@ -30,6 +34,8 @@ public:
         {
             return !(*this == note);
         }
+
+        friend std::istream& operator>>(std::istream& is, Note& note);
 
 #ifndef __clang__
 
@@ -78,15 +84,23 @@ public:
 
     [[nodiscard]] vector<Note> get_current_notes() const;
 
+    void set_instrument(const string& name);
+
 private:
     PaStream** stream;
+    unique_ptr<Voice> voice_prototype;
     map<Note, Voice*> voices;
     mutable mutex voices_guard;
     decltype(voices)::size_type voices_limit = 0; // Maximum number of voices. 0 means no limits.
+    map<std::string, Instrument> instruments;
 
     void start() const;
 
-    static void load_samples();
+    void load_instruments();
+
+    void clear_voices();
+
+    vector<string> get_all_instruments();
 };
 
 class Voice {
@@ -95,7 +109,15 @@ private:
     double volume{};
     double freq{};
 
+    virtual Voice* new_copy() = 0;
+
 public:
+
+    Voice* clone()
+    {
+        return new_copy();
+    }
+
     typedef array<int, 4> Adsr;
 
     explicit Voice(Adsr adsr)
@@ -106,6 +128,8 @@ public:
         env.setSustain(adsr[2]);
         env.setRelease(adsr[3]);
     }
+
+    virtual ~Voice() = default;
 
     virtual double output_something() = 0;
 
@@ -145,6 +169,12 @@ public:
 class SynthVoice : public Voice {
 private:
     maxiOsc osc;
+
+    Voice* new_copy() override
+    {
+        return new SynthVoice(*this);
+    }
+
 public:
     SynthVoice()
             :Voice({10, 50, 100, 1000}) { }
@@ -157,10 +187,12 @@ public:
 
 class SamplerVoice : public Voice {
 public:
-    SamplerVoice()
-            :Voice({10, 10, 100, 4000})
+    explicit SamplerVoice(const Adsr& adsr, const Player::Note& sample_base_note)
+            :Voice(adsr), base_note(sample_base_note)
     {
     };
+
+    void load(const string& sample_dir);
 
     double output_something() override;
 
@@ -171,8 +203,38 @@ public:
 
     static maxiSample guitar_sample;
 private:
+    Voice* new_copy() override
+    {
+        return new SamplerVoice(*this);
+    }
+
     maxiSample sample{guitar_sample};
     bool shouldTurnOn = false;
+    Player::Note base_note;
 };
+
+class Instrument {
+public:
+    Instrument(const Voice::Adsr& adsr, string sample_dir, Player::Note base_note)
+            :adsr(adsr), sample_dir(std::move(sample_dir)), base_note(base_note) { }
+
+    Instrument() = default;
+
+    [[nodiscard]] unique_ptr<Voice> get_prototype() const;
+
+private:
+    Voice::Adsr adsr;
+    std::string sample_dir;
+    Player::Note base_note;
+};
+
+template<class T>
+std::vector<typename T::key_type> get_all_keys(const T& m)
+{
+    std::vector<typename T::key_type> ret;
+    ret.reserve(m.size());
+    for_each(m.begin(), m.end(), [&ret](class T::value_type pair) { ret.push_back(pair.first); });
+    return ret;
+}
 
 #endif //KBI_PLAYER_H

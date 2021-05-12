@@ -47,8 +47,6 @@ private:
 
     bool hasGotNote(guint keyVal, const Gdk::ModifierType& state, Player::Note& note);
 
-    void print_current_notes();
-
     bool on_key_pressed(guint keyVal, guint, Gdk::ModifierType state) override;
 
     void on_key_released(guint keyVal, guint, Gdk::ModifierType state) override;

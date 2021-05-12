@@ -51,11 +51,13 @@ void NotesDrawingArea::draw_text(const Cairo::RefPtr<Cairo::Context>& cr, int re
     std::stringstream draw_note;
     auto current_notes = player->get_current_notes();
     for (const auto& note : current_notes) {
-        draw_note << note << " ";
+        draw_note << get_span_tag(string{static_cast<char>(note.letter)}, "#7ac6ff")
+                  << get_span_tag(get_sub_tag(to_string(note.number)), "#42f5b3") << " ";
     }
 
-    auto layout = create_pango_layout(draw_note.str());
+    auto layout = create_pango_layout("");
     layout->set_font_description(font);
+    layout->set_markup(draw_note.str());
 
     int text_width, text_height;
 
@@ -67,6 +69,16 @@ void NotesDrawingArea::draw_text(const Cairo::RefPtr<Cairo::Context>& cr, int re
 
     layout->show_in_cairo_context(cr);
 
+}
+
+string NotesDrawingArea::get_span_tag(const string& text, const string& color)
+{
+    return "<span foreground=\"" + color + "\">" + text + "</span>";
+}
+
+string NotesDrawingArea::get_sub_tag(const string& text)
+{
+    return "<sub>" + text + "</sub>";
 }
 
 bool NotesDrawingArea::refresh()

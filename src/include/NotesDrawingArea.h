@@ -22,6 +22,10 @@ private:
     Player* player;
 
     bool refresh();
+
+    static string get_span_tag(const string& text, const string& color);
+
+    static string get_sub_tag(const string& text);
 };
 
 #endif //KBI_NOTESDRAWINGAREA_H

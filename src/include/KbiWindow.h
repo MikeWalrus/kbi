@@ -48,6 +48,8 @@ private:
     const std::map<string, CtrlFactoryMethod> controllers = {{"default", Controller::create}};
     shared_ptr<Ctrl> controller;
     shared_ptr<Gtk::Settings> settings;
+
+    static void init_button(Gtk::Button& bu);
 };
 
 void setup();//use this to do any initialisation if you want.

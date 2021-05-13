@@ -66,6 +66,10 @@ private:
     ModelColumns kbi_columns;
     Gtk::ComboBox kbi_combobox_instruments;
     Glib::RefPtr<Gtk::ListStore> kbi_ref_treemodel;
+    shared_ptr<Gtk::Settings> settings;
+
+    static void init_button(Gtk::Button& bu);
+
 };
 
 void setup();//use this to do any initialisation if you want.

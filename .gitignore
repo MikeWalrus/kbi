@@ -3,6 +3,7 @@ cmake-build-debug/
 *build*/
 .idea/
 
+src/resource/kbi.gresourse.c
 
 *.[oa]
 *~

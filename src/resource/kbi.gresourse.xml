@@ -3,4 +3,9 @@
     <gresource prefix="/kbi">
         <file preprocess="xml-stripblanks">window.ui</file>
     </gresource>
+    <gresource prefix="/kbi/instruments">
+        <file>guitar_e3.wav</file>
+        <file>violin_a4.wav</file>
+        <file>saxophone_c3.wav</file>
+    </gresource>
 </gresources>

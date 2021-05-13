@@ -118,10 +118,7 @@ void Player::note_off(const Note& note)
 vector<Player::Note> Player::get_current_notes() const
 {
     scoped_lock<mutex> lock(voices_guard);
-    vector<Note> ret;
-    ret.reserve(voices.size());
-    for_each(voices.begin(), voices.end(), [&ret](decltype(*voices.begin()) pair) { ret.push_back(pair.first); });
-    return ret;
+    return get_all_keys(voices);
 }
 
 void Player::load_instruments()
@@ -213,8 +210,7 @@ std::vector<string> Player::get_all_instruments()
 unique_ptr<Voice> Instrument::get_prototype() const
 {
     Voice* voice;
-    if (sample_dir.find("/kbi") == string::npos)
-    {
+    if (sample_dir.find("/kbi") == string::npos) {
         voice = new SynthVoice();
     }
     else {

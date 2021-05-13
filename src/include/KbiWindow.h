@@ -60,7 +60,7 @@ private:
             add(kbi_instruments_name);
         }
 
-        Gtk::TreeModelColumn<Glib::ustring> kbi_instruments_name;
+        Gtk::TreeModelColumn<std::string> kbi_instruments_name;
     };
 
     ModelColumns kbi_columns;
@@ -70,6 +70,7 @@ private:
 
     static void init_button(Gtk::Button& bu);
 
+    void load_instrument_tree_model();
 };
 
 void setup();//use this to do any initialisation if you want.

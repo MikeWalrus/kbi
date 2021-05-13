@@ -69,9 +69,6 @@ void NotesDrawingArea::draw_text(const Cairo::RefPtr<Cairo::Context>& cr, int re
 
     layout->show_in_cairo_context(cr);
 
-    layout->set_markup(get_span_tag(get_tagged(get_tagged("DEMO", "tt"), "small"), "gray"));
-    cr->move_to(0, 0);
-    layout->show_in_cairo_context(cr);
     layout->set_markup(get_span_tag(get_tagged(player->get_current_instrument(), "i"), "#b3ff70"));
     layout->get_pixel_size(text_width, text_height);
     cr->move_to((rectangle_width - text_width)/2., 0);

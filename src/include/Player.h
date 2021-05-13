@@ -90,6 +90,8 @@ public:
 
     const string& get_current_instrument();
 
+    vector<string> get_all_instruments();
+
 private:
     PaStream** stream;
     unique_ptr<Voice> voice_prototype;
@@ -103,8 +105,6 @@ private:
     void load_instruments();
 
     void clear_voices();
-
-    vector<string> get_all_instruments();
 
     decltype(instruments.cbegin()) current_instrument;
 

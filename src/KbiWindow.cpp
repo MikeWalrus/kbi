@@ -72,20 +72,22 @@ KbiWindow::KbiWindow(Player* p_player)
     kbi_ref_treemodel = Gtk::ListStore::create(kbi_columns);
     kbi_combobox_instruments.set_model(kbi_ref_treemodel);
     kbi_combobox_instruments.pack_start(kbi_columns.kbi_instruments_name);
-    kbi_combobox_instruments.set_active(0);
     kbi_combobox_instruments.signal_changed().connect(
             sigc::mem_fun(*this, &KbiWindow::on_combobox));
     //fill the tree model
-    auto row = *(kbi_ref_treemodel->append());
-    row[kbi_columns.kbi_instruments_name] = "Sine Wave";
-    row = *(kbi_ref_treemodel->append());
-    row[kbi_columns.kbi_instruments_name] = "Guitar";
-    row = *(kbi_ref_treemodel->append());
-    row[kbi_columns.kbi_instruments_name] = "what";
-    row = *(kbi_ref_treemodel->append());
-    row[kbi_columns.kbi_instruments_name] = "Violin";
+    load_instrument_tree_model();
 
     setup();
+}
+
+void KbiWindow::load_instrument_tree_model()
+{
+    auto instruments = player->get_all_instruments();
+    for (const auto& name : instruments) {
+        auto row = *(kbi_ref_treemodel->append());
+        row[kbi_columns.kbi_instruments_name] = name;
+    }
+    kbi_combobox_instruments.set_active(0);
 }
 
 void KbiWindow::init_button(Gtk::Button& bu)
@@ -129,12 +131,12 @@ void KbiWindow::on_combobox()
     if (!iter) {
         return;
     }
-
     const auto row = *iter;
     if (!row) {
         return;
     }
-
+    string instrument_name = row[kbi_columns.kbi_instruments_name];
+    player->set_instrument(instrument_name);
 }
 
 KbiWindow::~KbiWindow()

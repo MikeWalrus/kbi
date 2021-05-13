@@ -12,6 +12,7 @@ KbiWindow::KbiWindow(Player* p_player)
         kbi_box1(Gtk::Orientation::VERTICAL, 20),
         kbi_box2(Gtk::Orientation::HORIZONTAL, 20),
         kbi_box_switch(Gtk::Orientation::HORIZONTAL, 0),
+        kbi_box_combobox(Gtk::Orientation::HORIZONTAL, 0),
         kbi_button_control_play_or_stop("Play"),
         kbi_button_quit("Close"),
         player(p_player),
@@ -29,12 +30,15 @@ KbiWindow::KbiWindow(Player* p_player)
     kbi_box1.set_expand(true);
     kbi_box1.append(kbi_draw);
     kbi_box2.append(kbi_box_switch);
+    kbi_box2.append(kbi_box_combobox);
     kbi_box2.append(kbi_button_control_play_or_stop);
     kbi_box2.append(kbi_button_quit);
     kbi_box_switch.append(*Gtk::make_managed<Gtk::Label>("Polyphonic", 0));
     kbi_box_switch.append(kbi_switch_control_voices_limit);
     kbi_box_switch.set_margin_start(10);
     kbi_box_switch.set_margin_end(10);
+    kbi_box_combobox.append(*Gtk::make_managed<Gtk::Label>("Instruments", 0));
+    kbi_box_combobox.append(kbi_combobox_instruments);
 
     //set kbi_button_control_play_or_stop
     kbi_button_control_play_or_stop.set_margin(10);
@@ -63,6 +67,23 @@ KbiWindow::KbiWindow(Player* p_player)
     kbi_switch_control_voices_limit.set_active(true);
     kbi_switch_control_voices_limit.property_active().signal_changed().connect(
             sigc::mem_fun(*this, &KbiWindow::on_switch_control_voices_limit_clicked));
+
+    //set kbi_combobox_instruments
+    kbi_combobox_instruments.set_margin(10);
+    kbi_combobox_instruments.set_vexpand(false);
+    kbi_combobox_instruments.set_hexpand(true);
+    kbi_combobox_instruments.set_valign(Gtk::Align::CENTER);
+    kbi_combobox_instruments.set_halign(Gtk::Align::FILL);
+    //create the tree model
+    kbi_ref_treemodel = Gtk::ListStore::create(kbi_columns);
+    kbi_combobox_instruments.set_model(kbi_ref_treemodel);
+    kbi_combobox_instruments.pack_start(kbi_columns.kbi_instruments_name);
+    //fill the tree model
+    auto row = *(kbi_ref_treemodel->append());
+    row[kbi_columns.kbi_instruments_name] = "Sine Wave";
+    row[kbi_columns.kbi_instruments_name] = "Guitar";
+    row[kbi_columns.kbi_instruments_name] = "what";
+    row[kbi_columns.kbi_instruments_name] = "Violin";
 
     setup();
 }

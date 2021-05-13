@@ -35,7 +35,6 @@ KbiWindow::KbiWindow(Player* p_player)
     kbi_box2.append(kbi_box_combobox);
     kbi_box2.append(kbi_button_control_play_or_stop);
     kbi_box2.append(kbi_button_quit);
-    kbi_box2.append(button_next_instrument);
     kbi_box_switch.append(*Gtk::make_managed<Gtk::Label>("Polyphonic", 0));
     kbi_box_switch.append(kbi_switch_control_voices_limit);
     kbi_box_switch.set_margin_start(10);

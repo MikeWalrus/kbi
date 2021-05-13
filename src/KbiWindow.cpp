@@ -78,11 +78,17 @@ KbiWindow::KbiWindow(Player* p_player)
     kbi_ref_treemodel = Gtk::ListStore::create(kbi_columns);
     kbi_combobox_instruments.set_model(kbi_ref_treemodel);
     kbi_combobox_instruments.pack_start(kbi_columns.kbi_instruments_name);
+    kbi_combobox_instruments.set_active(0);
+    kbi_combobox_instruments.signal_changed().connect(
+            sigc::mem_fun(*this, &KbiWindow::on_combobox));
     //fill the tree model
     auto row = *(kbi_ref_treemodel->append());
     row[kbi_columns.kbi_instruments_name] = "Sine Wave";
+    row = *(kbi_ref_treemodel->append());
     row[kbi_columns.kbi_instruments_name] = "Guitar";
+    row = *(kbi_ref_treemodel->append());
     row[kbi_columns.kbi_instruments_name] = "what";
+    row = *(kbi_ref_treemodel->append());
     row[kbi_columns.kbi_instruments_name] = "Violin";
 
     setup();
@@ -112,6 +118,20 @@ void KbiWindow::on_switch_control_voices_limit_clicked()
     int voices_number;
     voices_number = isPolyphonic ? 0 : 1;
     player->set_voices_limit(voices_number);
+}
+
+void KbiWindow::on_combobox()
+{
+    const auto iter = kbi_combobox_instruments.get_active();
+    if (!iter) {
+        return;
+    }
+
+    const auto row = *iter;
+    if (!row) {
+        return;
+    }
+
 }
 
 KbiWindow::~KbiWindow()

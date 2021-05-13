@@ -55,9 +55,11 @@ private:
 
     class ModelColumns : public Gtk::TreeModel::ColumnRecord {
     public:
-        ModelColumns(){
+        ModelColumns()
+        {
             add(kbi_instruments_name);
         }
+
         Gtk::TreeModelColumn<Glib::ustring> kbi_instruments_name;
     };
 
@@ -65,8 +67,6 @@ private:
     Gtk::ComboBox kbi_combobox_instruments;
     Glib::RefPtr<Gtk::ListStore> kbi_ref_treemodel;
 };
-
-
 
 void setup();//use this to do any initialisation if you want.
 

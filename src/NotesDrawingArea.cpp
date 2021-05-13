@@ -13,7 +13,9 @@ NotesDrawingArea::NotesDrawingArea(Player* p_player)
     Glib::signal_timeout().connect(sigc::mem_fun(*this, &NotesDrawingArea::refresh), 100);
     font.set_family("Serif");
     font.set_weight(Pango::Weight::BOLD);
-    font.set_size(35000);
+    font.set_size(70000);
+    layout = create_pango_layout("");
+    layout->set_font_description(font);
 }
 
 NotesDrawingArea::~NotesDrawingArea()
@@ -51,11 +53,11 @@ void NotesDrawingArea::draw_text(const Cairo::RefPtr<Cairo::Context>& cr, int re
     std::stringstream draw_note;
     auto current_notes = player->get_current_notes();
     for (const auto& note : current_notes) {
-        draw_note << note << " ";
+        draw_note << get_span_tag(string{static_cast<char>(note.letter)}, "#7ac6ff")
+                  << get_span_tag(get_tagged(to_string(note.number), "sub"), "#42f5b3") << " ";
     }
 
-    auto layout = create_pango_layout(draw_note.str());
-    layout->set_font_description(font);
+    layout->set_markup(draw_note.str());
 
     int text_width, text_height;
 
@@ -67,6 +69,20 @@ void NotesDrawingArea::draw_text(const Cairo::RefPtr<Cairo::Context>& cr, int re
 
     layout->show_in_cairo_context(cr);
 
+    layout->set_markup(get_span_tag(get_tagged(player->get_current_instrument(), "i"), "#b3ff70"));
+    layout->get_pixel_size(text_width, text_height);
+    cr->move_to((rectangle_width - text_width)/2., 0);
+    layout->show_in_cairo_context(cr);
+}
+
+string NotesDrawingArea::get_span_tag(const string& text, const string& color)
+{
+    return "<span foreground=\"" + color + "\">" + text + "</span>";
+}
+
+string NotesDrawingArea::get_tagged(const string& text, const string& tag)
+{
+    return "<" + tag + ">" + text + "</" + tag + ">";
 }
 
 bool NotesDrawingArea::refresh()

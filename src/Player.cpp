@@ -10,6 +10,7 @@ Player::Player(void** stream, double* output)
         :stream(stream), output(output)
 {
     load_instruments();
+    instruments[string("Sine Wave")] = Instrument({10, 10, 100, 1000}, "sine", Player::Note());
     set_instrument(instruments.begin()->first);
 }
 
@@ -145,7 +146,7 @@ double SamplerVoice::output_something()
 {
     auto length = sample.getLength();
     auto begin = length/10*9;
-    auto end = length/100*91;
+    auto end = length/100*92;
     length = end - begin;
     auto frequ = get_freq()/Player::noteToFrequency(base_note)/length*sample.mySampleRate;
     auto sample_output = sample.play(frequ, static_cast<double>(begin), static_cast<double>(end));
@@ -200,10 +201,8 @@ std::istream& operator>>(istream& is, Player::Note& note)
 
 void Player::set_instrument(const string& name)
 {
-    scoped_lock<mutex> lock(voices_guard);
-    auto instrument = instruments.at(name);
-    clear_voices();
-    voice_prototype = instrument.get_prototype();
+    auto instrument = instruments.find(name);
+    set_instrument(instrument);
 }
 
 std::vector<string> Player::get_all_instruments()
@@ -213,13 +212,41 @@ std::vector<string> Player::get_all_instruments()
 
 unique_ptr<Voice> Instrument::get_prototype() const
 {
-    auto voice = new SamplerVoice(adsr, base_note);
-    voice->load(sample_dir);
+    Voice* voice;
+    if (sample_dir.find("/kbi") == string::npos)
+    {
+        voice = new SynthVoice();
+    }
+    else {
+        auto samplerVoice = new SamplerVoice(adsr, base_note);
+        samplerVoice->load(sample_dir);
+        voice = samplerVoice;
+    }
     return unique_ptr<Voice>(voice);
 }
 
 void Player::set_voices_limit(int voices_number)
 {
     Player::voices_limit = voices_number;
+}
+
+void Player::next_instrument()
+{
+    if (++current_instrument == instruments.cend())
+        current_instrument = instruments.cbegin();
+    set_instrument(current_instrument);
+}
+
+void Player::set_instrument(map<string, Instrument>::const_iterator iterator)
+{
+    scoped_lock<mutex> lock(voices_guard);
+    clear_voices();
+    voice_prototype = iterator->second.get_prototype();
+    current_instrument = iterator;
+}
+
+const string& Player::get_current_instrument()
+{
+    return current_instrument->first;
 }
 

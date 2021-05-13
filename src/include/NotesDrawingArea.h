@@ -25,7 +25,9 @@ private:
 
     static string get_span_tag(const string& text, const string& color);
 
-    static string get_sub_tag(const string& text);
+    static string get_tagged(const string& text, const string& tag);
+
+    shared_ptr<Pango::Layout> layout;
 };
 
 #endif //KBI_NOTESDRAWINGAREA_H

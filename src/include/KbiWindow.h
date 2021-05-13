@@ -39,7 +39,7 @@ private:
     int kbi_window_width = 600;            //decide window's width
     int kbi_window_height = 700;           //decide window's height
     Gtk::Box kbi_box_top, kbi_box1, kbi_box2, kbi_box_switch;
-    Gtk::Button kbi_button_control_play_or_stop, kbi_button_quit;
+    Gtk::Button kbi_button_control_play_or_stop, kbi_button_quit, button_next_instrument;
     Gtk::Switch kbi_switch_control_voices_limit;
 
     Player* player;
@@ -50,6 +50,8 @@ private:
     shared_ptr<Gtk::Settings> settings;
 
     static void init_button(Gtk::Button& bu);
+
+    void next_instrument();
 };
 
 void setup();//use this to do any initialisation if you want.

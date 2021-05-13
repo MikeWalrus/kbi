@@ -14,6 +14,7 @@ KbiWindow::KbiWindow(Player* p_player)
         kbi_box_switch(Gtk::Orientation::HORIZONTAL, 0),
         kbi_button_control_play_or_stop("Play"),
         kbi_button_quit("Close"),
+        button_next_instrument("Next Instrument"),
         player(p_player),
         kbi_draw(p_player),
         controller(controllers.at("default")(p_player)),
@@ -33,6 +34,7 @@ KbiWindow::KbiWindow(Player* p_player)
     kbi_box2.append(kbi_box_switch);
     kbi_box2.append(kbi_button_control_play_or_stop);
     kbi_box2.append(kbi_button_quit);
+    kbi_box2.append(button_next_instrument);
     kbi_box_switch.append(*Gtk::make_managed<Gtk::Label>("Polyphonic", 0));
     kbi_box_switch.append(kbi_switch_control_voices_limit);
     kbi_box_switch.set_margin_start(10);
@@ -47,6 +49,9 @@ KbiWindow::KbiWindow(Player* p_player)
     init_button(kbi_button_quit);
     kbi_button_quit.signal_clicked().connect(
             sigc::mem_fun(*this, &KbiWindow::on_button_quit_clicked));
+
+    init_button(button_next_instrument);
+    button_next_instrument.signal_clicked().connect(sigc::mem_fun(*this, &KbiWindow::next_instrument));
 
     //set kbi_switch_control_voices_limit
     kbi_switch_control_voices_limit.set_margin(10);
@@ -94,6 +99,11 @@ void KbiWindow::on_switch_control_voices_limit_clicked()
     int voices_number;
     voices_number = isPolyphonic ? 0 : 1;
     player->set_voices_limit(voices_number);
+}
+
+void KbiWindow::next_instrument()
+{
+    player->next_instrument();
 }
 
 KbiWindow::~KbiWindow()

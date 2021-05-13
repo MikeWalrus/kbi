@@ -5,6 +5,7 @@
 #ifndef KBI_PLAYER_H
 #define KBI_PLAYER_H
 
+
 #include <map>
 #include <maxiSynths.h>
 #include <mutex>
@@ -109,6 +110,7 @@ private:
     decltype(instruments.cbegin()) current_instrument;
 
     void set_instrument(decltype(instruments.cbegin()) iterator);
+
 };
 
 class Voice {
@@ -200,7 +202,11 @@ public:
     {
     };
 
+    typedef vector<double>::const_iterator Sample_iterator;
+
     void load(const string& sample_dir);
+
+    void find_loop();
 
     double output_something() override;
 
@@ -209,16 +215,29 @@ public:
         shouldTurnOn = true;
     }
 
-    static maxiSample guitar_sample;
 private:
     Voice* new_copy() override
     {
         return new SamplerVoice(*this);
     }
 
-    maxiSample sample{guitar_sample};
+    maxiSample sample;
     bool shouldTurnOn = false;
     Player::Note base_note;
+
+    Sample_iterator find_zero_cross_near(vector<double>::const_iterator position);
+
+    Sample_iterator find_next_zero_cross(vector<double>::const_iterator iterator);
+
+    static void display_wave(Sample_iterator begin, Sample_iterator end);
+
+    double how_close(Sample_iterator begin, Sample_iterator end);
+
+    Sample_iterator find_best_loop(Sample_iterator& start, int count);
+
+    long loop_begin;
+    long loop_end;
+    long loop_length;
 };
 
 class Instrument {

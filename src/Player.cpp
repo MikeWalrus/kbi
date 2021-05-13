@@ -1,10 +1,9 @@
 #include <stdexcept>
+#include <algorithm>
 #include "maximilian.h"
 #include "Player.h"
 #include "membuf.h"
 #include "gtkmm.h"
-
-maxiSample SamplerVoice::guitar_sample;
 
 Player::Player(void** stream, double* output)
         :stream(stream), output(output)
@@ -141,12 +140,8 @@ void Player::load_instruments()
 
 double SamplerVoice::output_something()
 {
-    auto length = sample.getLength();
-    auto begin = length/10*9;
-    auto end = length/100*92;
-    length = end - begin;
-    auto frequ = get_freq()/Player::noteToFrequency(base_note)/length*sample.mySampleRate;
-    auto sample_output = sample.play(frequ, static_cast<double>(begin), static_cast<double>(end));
+    auto freq = get_freq()/Player::noteToFrequency(base_note)/static_cast<double>(loop_length)*sample.mySampleRate;
+    auto sample_output = sample.play(freq, static_cast<double>(loop_begin), static_cast<double>(loop_end));
     // In order to eliminate the 'audio pops', we should wait until its output reaches 0
     // before going back to the beginning.
     if (shouldTurnOn) {
@@ -172,6 +167,76 @@ void SamplerVoice::load(const string& sample_dir)
         cout << error.what() << endl;
         throw;
     }
+}
+
+void SamplerVoice::find_loop()
+{
+    auto start = find_zero_cross_near(
+            std::next(sample.amplitudes->cbegin(), static_cast<long>(sample.amplitudes->size()*2/3)));
+    int count = 20;
+    Sample_iterator best_end;
+    try {
+        best_end = find_best_loop(start, count);
+    }
+    catch (std::runtime_error& error) {
+        best_end = find_best_loop(start, count/2);
+    }
+    display_wave(start, best_end);
+    loop_begin = start - sample.amplitudes->cbegin();
+    loop_end = best_end - sample.amplitudes->cbegin();
+    loop_length = loop_end - loop_begin;
+}
+
+SamplerVoice::Sample_iterator SamplerVoice::find_best_loop(SamplerVoice::Sample_iterator& start, int count)
+{
+    auto next = start;
+    auto best = next;
+    double badness_min = 1;
+    for (int i = 0; i < count; ++i) {
+        next = find_next_zero_cross(next);
+        double badness = how_close(start, next);
+        cout << i << ": Badness: " << badness << endl;
+        if (badness < badness_min) {
+            badness_min = badness;
+            best = next;
+        }
+    }
+    cout << "Best Effort: " << badness_min << endl;
+    return best;
+}
+
+SamplerVoice::Sample_iterator SamplerVoice::find_zero_cross_near(Sample_iterator position)
+{
+    return adjacent_find(position, sample.amplitudes->cend(),
+            [](auto prev, auto next) { return signbit(prev) != signbit(next); });
+}
+
+SamplerVoice::Sample_iterator SamplerVoice::find_next_zero_cross(Sample_iterator iterator)
+{
+    if (iterator + 100 > sample.amplitudes->cend())
+        return iterator;
+    return find_zero_cross_near(iterator + 100);
+}
+
+void SamplerVoice::display_wave(SamplerVoice::Sample_iterator begin, SamplerVoice::Sample_iterator end)
+{
+    for (auto it = begin; it < end; it += 3) {
+        for (int i = 0; i < (*it + 1)*50; ++i) {
+            cout << "*";
+        }
+        cout << endl;
+    }
+}
+
+double SamplerVoice::how_close(SamplerVoice::Sample_iterator begin, SamplerVoice::Sample_iterator end)
+{
+    double ret = 0;
+    if (2*(end - begin) + end > sample.amplitudes->cend())
+        throw std::runtime_error("Reached the end!");
+    for (auto this_loop = begin, next_loop = end; this_loop != end; ++this_loop, ++next_loop) {
+        ret += abs(*this_loop - *next_loop);
+    }
+    return ret/static_cast<double>(end - begin);
 }
 
 std::istream& operator>>(istream& is, Player::Note& note)
@@ -216,6 +281,7 @@ unique_ptr<Voice> Instrument::get_prototype() const
     else {
         auto samplerVoice = new SamplerVoice(adsr, base_note);
         samplerVoice->load(sample_dir);
+        samplerVoice->find_loop();
         voice = samplerVoice;
     }
     return unique_ptr<Voice>(voice);

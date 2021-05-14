@@ -53,11 +53,8 @@ KbiWindow::KbiWindow(Player* p_player)
             sigc::mem_fun(*this, &KbiWindow::on_button_quit_clicked));
 
     //set kbi_switch_control_voices_limit
-    kbi_switch_control_voices_limit.set_margin(10);
-    kbi_switch_control_voices_limit.set_vexpand(false);
+    init_widget(kbi_switch_control_voices_limit);
     kbi_switch_control_voices_limit.set_hexpand(false);
-    kbi_switch_control_voices_limit.set_valign(Gtk::Align::CENTER);
-    kbi_switch_control_voices_limit.set_halign(Gtk::Align::FILL);
     kbi_switch_control_voices_limit.set_active(true);
     kbi_switch_control_voices_limit.property_active().signal_changed().connect(
             sigc::mem_fun(*this, &KbiWindow::on_switch_control_voices_limit_clicked));

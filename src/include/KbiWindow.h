@@ -68,7 +68,7 @@ private:
     Glib::RefPtr<Gtk::ListStore> kbi_ref_treemodel;
     shared_ptr<Gtk::Settings> settings;
 
-    static void init_button(Gtk::Button& bu);
+    static void init_widget(Gtk::Widget& widget);
 
     void load_instrument_tree_model();
 };

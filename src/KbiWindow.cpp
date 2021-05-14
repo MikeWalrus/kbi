@@ -12,6 +12,7 @@ KbiWindow::KbiWindow(Player* p_player)
         kbi_vbox_draw(Gtk::Orientation::VERTICAL, 20),
         kbi_hbox_button(Gtk::Orientation::HORIZONTAL, 20),
         kbi_hbox_switch(Gtk::Orientation::HORIZONTAL, 0),
+        kbi_hbox_instruments_setting(Gtk::Orientation::HORIZONTAL, 10),
         kbi_hbox_combobox(Gtk::Orientation::HORIZONTAL, 0),
         kbi_button_control_play_or_stop("Play"),
         kbi_button_quit("Close"),
@@ -27,12 +28,13 @@ KbiWindow::KbiWindow(Player* p_player)
     set_title("kbi");
     set_default_size(KbiWindow::kbi_window_width, KbiWindow::kbi_window_height);
     kbi_vbox_top.append(kbi_vbox_draw);
+    kbi_vbox_top.append(kbi_hbox_instruments_setting);
     kbi_vbox_top.append(kbi_hbox_button);
-    kbi_vbox_draw.set_size_request(KbiWindow::kbi_window_width, KbiWindow::kbi_window_height - 100);
+    kbi_vbox_draw.set_size_request(KbiWindow::kbi_window_width, KbiWindow::kbi_window_height - 200);
     kbi_vbox_draw.set_expand(true);
     kbi_vbox_draw.append(kbi_draw);
-    kbi_hbox_button.append(kbi_hbox_switch);
-    kbi_hbox_button.append(kbi_hbox_combobox);
+    kbi_hbox_instruments_setting.append(kbi_hbox_switch);
+    kbi_hbox_instruments_setting.append(kbi_hbox_combobox);
     kbi_hbox_button.append(kbi_button_control_play_or_stop);
     kbi_hbox_button.append(kbi_button_quit);
     kbi_hbox_switch.append(*Gtk::make_managed<Gtk::Label>("Polyphonic", 0));

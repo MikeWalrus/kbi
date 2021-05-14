@@ -169,25 +169,26 @@ void SamplerVoice::load(const string& sample_dir)
     }
 }
 
-void SamplerVoice::find_loop()
+array<long, 2> SamplerVoice::find_loop()
 {
     auto start = find_zero_cross_near(
             std::next(sample.amplitudes->cbegin(), static_cast<long>(sample.amplitudes->size()*2/3)));
     int count = 20;
     Sample_iterator best_end;
     try {
-        best_end = find_best_loop(start, count);
+        best_end = find_loop_at(start, count);
     }
     catch (std::runtime_error& error) {
-        best_end = find_best_loop(start, count/2);
+        best_end = find_loop_at(start, count/2);
     }
     display_wave(start, best_end);
-    loop_begin = start - sample.amplitudes->cbegin();
-    loop_end = best_end - sample.amplitudes->cbegin();
-    loop_length = loop_end - loop_begin;
+    auto begin = start - sample.amplitudes->cbegin();
+    auto end = best_end - sample.amplitudes->cbegin();
+    loop_length = end - begin;
+    return {begin, end};
 }
 
-SamplerVoice::Sample_iterator SamplerVoice::find_best_loop(SamplerVoice::Sample_iterator& start, int count)
+SamplerVoice::Sample_iterator SamplerVoice::find_loop_at(SamplerVoice::Sample_iterator& start, int count)
 {
     auto next = start;
     auto best = next;
@@ -239,6 +240,12 @@ double SamplerVoice::how_close(SamplerVoice::Sample_iterator begin, SamplerVoice
     return ret/static_cast<double>(end - begin);
 }
 
+void SamplerVoice::set_loop(const array<long, 2>& loop)
+{
+    loop_begin = loop[0];
+    loop_end = loop[1];
+}
+
 std::istream& operator>>(istream& is, Player::Note& note)
 {
     is >> std::ws;
@@ -272,7 +279,7 @@ std::vector<string> Player::get_all_instruments()
     return get_all_keys(instruments);
 }
 
-unique_ptr<Voice> Instrument::get_prototype() const
+unique_ptr<Voice> Instrument::get_prototype()
 {
     Voice* voice;
     if (sample_dir.find("/kbi") == string::npos) {
@@ -281,7 +288,10 @@ unique_ptr<Voice> Instrument::get_prototype() const
     else {
         auto samplerVoice = new SamplerVoice(adsr, base_note);
         samplerVoice->load(sample_dir);
-        samplerVoice->find_loop();
+        if (!sample_loop[0]) {
+            sample_loop = samplerVoice->find_loop();
+            samplerVoice->set_loop(sample_loop);
+        }
         voice = samplerVoice;
     }
     return unique_ptr<Voice>(voice);
@@ -294,12 +304,12 @@ void Player::set_voices_limit(int voices_number)
 
 void Player::next_instrument()
 {
-    if (++current_instrument == instruments.cend())
-        current_instrument = instruments.cbegin();
+    if (++current_instrument == instruments.end())
+        current_instrument = instruments.begin();
     set_instrument(current_instrument);
 }
 
-void Player::set_instrument(map<string, Instrument>::const_iterator iterator)
+void Player::set_instrument(map<string, Instrument>::iterator iterator)
 {
     scoped_lock<mutex> lock(voices_guard);
     clear_voices();

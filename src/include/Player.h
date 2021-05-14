@@ -5,7 +5,6 @@
 #ifndef KBI_PLAYER_H
 #define KBI_PLAYER_H
 
-
 #include <map>
 #include <maxiSynths.h>
 #include <mutex>
@@ -107,9 +106,9 @@ private:
 
     void clear_voices();
 
-    decltype(instruments.cbegin()) current_instrument;
+    decltype(instruments.begin()) current_instrument;
 
-    void set_instrument(decltype(instruments.cbegin()) iterator);
+    void set_instrument(map<string, Instrument>::iterator iterator);
 
 };
 
@@ -206,7 +205,7 @@ public:
 
     void load(const string& sample_dir);
 
-    void find_loop();
+    array<long, 2> find_loop();
 
     double output_something() override;
 
@@ -214,6 +213,8 @@ public:
     {
         shouldTurnOn = true;
     }
+
+    void set_loop(const array<long, 2>& loop);
 
 private:
     Voice* new_copy() override
@@ -233,11 +234,11 @@ private:
 
     double how_close(Sample_iterator begin, Sample_iterator end);
 
-    Sample_iterator find_best_loop(Sample_iterator& start, int count);
+    Sample_iterator find_loop_at(Sample_iterator& start, int count);
 
-    long loop_begin;
-    long loop_end;
-    long loop_length;
+    long loop_begin{};
+    long loop_end{};
+    long loop_length{};
 };
 
 class Instrument {
@@ -247,12 +248,13 @@ public:
 
     Instrument() = default;
 
-    [[nodiscard]] unique_ptr<Voice> get_prototype() const;
+    [[nodiscard]] unique_ptr<Voice> get_prototype();
 
 private:
-    Voice::Adsr adsr;
+    Voice::Adsr adsr{};
     std::string sample_dir;
     Player::Note base_note;
+    array<long, 2> sample_loop{};
 };
 
 template<class T>

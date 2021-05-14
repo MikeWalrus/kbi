@@ -8,11 +8,11 @@
 
 KbiWindow::KbiWindow(Player* p_player)
         :
-        kbi_box_top(Gtk::Orientation::VERTICAL, 0),
-        kbi_box1(Gtk::Orientation::VERTICAL, 20),
-        kbi_box2(Gtk::Orientation::HORIZONTAL, 20),
-        kbi_box_switch(Gtk::Orientation::HORIZONTAL, 0),
-        kbi_box_combobox(Gtk::Orientation::HORIZONTAL, 0),
+        kbi_vbox_top(Gtk::Orientation::VERTICAL, 0),
+        kbi_vbox_draw(Gtk::Orientation::VERTICAL, 20),
+        kbi_hbox_button(Gtk::Orientation::HORIZONTAL, 20),
+        kbi_hbox_switch(Gtk::Orientation::HORIZONTAL, 0),
+        kbi_hbox_combobox(Gtk::Orientation::HORIZONTAL, 0),
         kbi_button_control_play_or_stop("Play"),
         kbi_button_quit("Close"),
         player(p_player),
@@ -23,24 +23,24 @@ KbiWindow::KbiWindow(Player* p_player)
     settings->property_gtk_application_prefer_dark_theme().set_value(TRUE);
 
     //set child widgets
-    set_child(kbi_box_top);
+    set_child(kbi_vbox_top);
     set_title("kbi");
     set_default_size(KbiWindow::kbi_window_width, KbiWindow::kbi_window_height);
-    kbi_box_top.append(kbi_box1);
-    kbi_box_top.append(kbi_box2);
-    kbi_box1.set_size_request(KbiWindow::kbi_window_width, KbiWindow::kbi_window_height - 100);
-    kbi_box1.set_expand(true);
-    kbi_box1.append(kbi_draw);
-    kbi_box2.append(kbi_box_switch);
-    kbi_box2.append(kbi_box_combobox);
-    kbi_box2.append(kbi_button_control_play_or_stop);
-    kbi_box2.append(kbi_button_quit);
-    kbi_box_switch.append(*Gtk::make_managed<Gtk::Label>("Polyphonic", 0));
-    kbi_box_switch.append(kbi_switch_control_voices_limit);
-    kbi_box_switch.set_margin_start(10);
-    kbi_box_switch.set_margin_end(10);
-    kbi_box_combobox.append(*Gtk::make_managed<Gtk::Label>("Instruments", 0));
-    kbi_box_combobox.append(kbi_combobox_instruments);
+    kbi_vbox_top.append(kbi_vbox_draw);
+    kbi_vbox_top.append(kbi_hbox_button);
+    kbi_vbox_draw.set_size_request(KbiWindow::kbi_window_width, KbiWindow::kbi_window_height - 100);
+    kbi_vbox_draw.set_expand(true);
+    kbi_vbox_draw.append(kbi_draw);
+    kbi_hbox_button.append(kbi_hbox_switch);
+    kbi_hbox_button.append(kbi_hbox_combobox);
+    kbi_hbox_button.append(kbi_button_control_play_or_stop);
+    kbi_hbox_button.append(kbi_button_quit);
+    kbi_hbox_switch.append(*Gtk::make_managed<Gtk::Label>("Polyphonic", 0));
+    kbi_hbox_switch.append(kbi_switch_control_voices_limit);
+    kbi_hbox_switch.set_margin_start(10);
+    kbi_hbox_switch.set_margin_end(10);
+    kbi_hbox_combobox.append(*Gtk::make_managed<Gtk::Label>("Instruments", 0));
+    kbi_hbox_combobox.append(kbi_combobox_instruments);
 
     //set kbi_button_control_play_or_stop
     init_widget(kbi_button_control_play_or_stop);

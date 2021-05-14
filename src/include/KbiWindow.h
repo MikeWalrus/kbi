@@ -43,7 +43,7 @@ private:
 
     int kbi_window_width = 600;            //decide window's width
     int kbi_window_height = 700;           //decide window's height
-    Gtk::Box kbi_box_top, kbi_box1, kbi_box2, kbi_box_switch, kbi_box_combobox;
+    Gtk::Box kbi_vbox_top, kbi_vbox_draw, kbi_hbox_button, kbi_hbox_switch, kbi_hbox_combobox;
     Gtk::Button kbi_button_control_play_or_stop, kbi_button_quit;
     Gtk::Switch kbi_switch_control_voices_limit;
 

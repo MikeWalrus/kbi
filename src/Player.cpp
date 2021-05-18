@@ -145,7 +145,7 @@ double SamplerVoice::output_something()
     // In order to eliminate the 'audio pops', we should wait until its output reaches 0
     // before going back to the beginning.
     if (shouldTurnOn) {
-        if (abs(sample_output) < 0.01) {
+        if (abs(sample_output) < 0.1) {
             sample.trigger();
             shouldTurnOn = false;
         }
@@ -181,10 +181,8 @@ array<long, 2> SamplerVoice::find_loop()
     catch (std::runtime_error& error) {
         best_end = find_loop_at(start, count/2);
     }
-    display_wave(start, best_end);
     auto begin = start - sample.amplitudes->cbegin();
     auto end = best_end - sample.amplitudes->cbegin();
-    loop_length = end - begin;
     return {begin, end};
 }
 
@@ -244,6 +242,7 @@ void SamplerVoice::set_loop(const array<long, 2>& loop)
 {
     loop_begin = loop[0];
     loop_end = loop[1];
+    loop_length = loop_end - loop_begin;
 }
 
 std::istream& operator>>(istream& is, Player::Note& note)
@@ -288,10 +287,9 @@ unique_ptr<Voice> Instrument::get_prototype()
     else {
         auto samplerVoice = new SamplerVoice(adsr, base_note);
         samplerVoice->load(sample_dir);
-        if (!sample_loop[0]) {
+        if (!sample_loop[0])
             sample_loop = samplerVoice->find_loop();
-            samplerVoice->set_loop(sample_loop);
-        }
+        samplerVoice->set_loop(sample_loop);
         voice = samplerVoice;
     }
     return unique_ptr<Voice>(voice);

@@ -106,9 +106,10 @@ private:
 
     void clear_voices();
 
-    decltype(instruments.cbegin()) current_instrument;
+    decltype(instruments.begin()) current_instrument;
 
-    void set_instrument(decltype(instruments.cbegin()) iterator);
+    void set_instrument(map<string, Instrument>::iterator iterator);
+
 };
 
 class Voice {
@@ -200,7 +201,11 @@ public:
     {
     };
 
+    typedef vector<double>::const_iterator Sample_iterator;
+
     void load(const string& sample_dir);
+
+    array<long, 2> find_loop();
 
     double output_something() override;
 
@@ -209,16 +214,31 @@ public:
         shouldTurnOn = true;
     }
 
-    static maxiSample guitar_sample;
+    void set_loop(const array<long, 2>& loop);
+
 private:
     Voice* new_copy() override
     {
         return new SamplerVoice(*this);
     }
 
-    maxiSample sample{guitar_sample};
+    maxiSample sample;
     bool shouldTurnOn = false;
     Player::Note base_note;
+
+    Sample_iterator find_zero_cross_near(vector<double>::const_iterator position);
+
+    Sample_iterator find_next_zero_cross(vector<double>::const_iterator iterator);
+
+    static void display_wave(Sample_iterator begin, Sample_iterator end);
+
+    double how_close(Sample_iterator begin, Sample_iterator end);
+
+    Sample_iterator find_loop_at(Sample_iterator& start, int count);
+
+    long loop_begin{};
+    long loop_end{};
+    long loop_length{};
 };
 
 class Instrument {
@@ -228,12 +248,13 @@ public:
 
     Instrument() = default;
 
-    [[nodiscard]] unique_ptr<Voice> get_prototype() const;
+    [[nodiscard]] unique_ptr<Voice> get_prototype();
 
 private:
-    Voice::Adsr adsr;
+    Voice::Adsr adsr{};
     std::string sample_dir;
     Player::Note base_note;
+    array<long, 2> sample_loop{};
 };
 
 template<class T>

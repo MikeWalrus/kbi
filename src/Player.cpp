@@ -77,7 +77,7 @@ void Player::play()
 }
 
 // calculate the frequency of a note
-// Note that this doesn't check if the note is valid.
+// Note that this doesn't check whether the note is valid.
 double Player::noteToFrequency(const Note& note)
 {
     int scale[7] = {0, 2, 3, 5, 7, 8, 10};
@@ -122,16 +122,22 @@ vector<Player::Note> Player::get_current_notes() const
 
 void Player::load_instruments()
 {
+    load_key_file();
+    load_builtin_instruments();
+}
+
+void Player::load_builtin_instruments()
+{
     char dir_prefix[] = "/kbi/instruments/";
     auto children_str = Gio::Resource::enumerate_children_global(dir_prefix);
     for (auto str : children_str) {
         Voice::Adsr adsr{10, 10, 100, 1000};
-        std::string dir = dir_prefix + str;
+        string dir = string("resource://") + dir_prefix + str;
         replace(str.begin(), str.end(), '.', ' ');
         replace(str.begin(), str.end(), '_', ' ');
         stringstream ss(str);
-        std::string name;
-        Player::Note base_note;
+        string name;
+        Note base_note;
         ss >> name;
         ss >> base_note;
         instruments[name] = {adsr, dir, base_note};
@@ -155,15 +161,19 @@ double SamplerVoice::output_something()
 
 void SamplerVoice::load(const string& sample_dir)
 {
+    using namespace Gio;
     try {
-        auto sample_bytes = Gio::Resource::lookup_data_global(sample_dir);
-        gsize size;
-        auto beg = static_cast<const char*>(sample_bytes->get_data(size));
-        membuf buf(beg, beg + size);
+        auto sample_file = File::create_for_uri(sample_dir);
+        auto size = sample_file->query_info()->get_size();
+        auto buffer = new char[size];
+        gsize loaded_size;
+        sample_file->load_contents(buffer, loaded_size);
+        membuf buf(buffer, buffer + size);
         istream in(&buf);
         sample.load(in);
+        delete[] buffer;
     }
-    catch (Gio::ResourceError& error) {
+    catch (ResourceError& error) {
         cout << error.what() << endl;
         throw;
     }
@@ -318,5 +328,19 @@ void Player::set_instrument(map<string, Instrument>::iterator iterator)
 const string& Player::get_current_instrument()
 {
     return current_instrument->first;
+}
+
+void Player::load_key_file()
+{
+    using namespace Glib;
+    instrument_key_file = KeyFile::create();
+    string full_path;
+    try {
+        instrument_key_file->load_from_data_dirs("kbi/instruments.conf", full_path);
+    }
+    catch (KeyFileError& error) {
+        instrument_key_file->save_to_file(get_user_data_dir() + "/kbi/instruments.conf");
+        instrument_key_file->load_from_data_dirs("kbi/instruments.conf", full_path);
+    }
 }
 

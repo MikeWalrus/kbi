@@ -10,6 +10,7 @@
 #include <mutex>
 #include <memory>
 #include <utility>
+#include <glibmm/keyfile.h>
 #include "portaudio.h"
 #include "maximilian.h"
 #include "utilities.h"
@@ -110,6 +111,11 @@ private:
 
     void set_instrument(map<string, Instrument>::iterator iterator);
 
+    void load_key_file();
+
+    Glib::RefPtr<Glib::KeyFile> instrument_key_file;
+
+    void load_builtin_instruments();
 };
 
 class Voice {

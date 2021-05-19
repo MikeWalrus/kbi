@@ -23,7 +23,7 @@ add_custom_command(
         VERBATIM
         MAIN_DEPENDENCY ${GRESOURCE_XML}
         DEPENDS
-        resource/window.ui resource/guitar_e3.wav resource/violin_a4.wav resource/saxophone_c3.wav
+        resource/window.ui resource/guitar_e3.wav resource/violin_a4.wav resource/saxophone_c3.wav resource/instruments.conf
 )
 
 add_custom_target(

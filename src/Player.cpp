@@ -320,8 +320,12 @@ void Player::load_key_file()
         key_file->load_from_data_dirs("kbi/instruments.conf", full_path);
     }
     catch (KeyFileError& error) {
-        key_file->save_to_file(get_user_data_dir() + "/kbi/instruments.conf");
-        key_file->load_from_data_dirs("kbi/instruments.conf", full_path);
+        // if instruments.conf doesn't exist, load the default file
+        auto default_file = Gio::Resource::lookup_data_global("/kbi/instruments.conf");
+        gsize size;
+        auto default_file_ptr = static_cast<const char*>(default_file->get_data(size));
+        string default_file_str{default_file_ptr, default_file_ptr + default_file->get_size()};
+        key_file->load_from_data(default_file_str);
     }
 }
 

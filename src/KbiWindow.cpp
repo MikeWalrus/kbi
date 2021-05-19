@@ -40,11 +40,13 @@ KbiWindow::KbiWindow(Player* p_player)
 
     //set kbi_button_control_play_or_stop
     init_widget(kbi_button_control_play_or_stop);
+    kbi_button_control_play_or_stop.set_size_request(300, 50);
     kbi_button_control_play_or_stop.signal_clicked().connect(
             sigc::mem_fun(*this, &KbiWindow::on_button_control_play_or_stop_clicked));
 
     //set kbi_button_quit
     init_widget(kbi_button_quit);
+    kbi_button_quit.set_size_request(300, 50);
     kbi_button_quit.signal_clicked().connect(
             sigc::mem_fun(*this, &KbiWindow::on_button_quit_clicked));
 
@@ -60,6 +62,7 @@ KbiWindow::KbiWindow(Player* p_player)
     //create the tree model
     kbi_ref_treemodel = Gtk::ListStore::create(kbi_columns);
     kbi_combobox_instruments.set_model(kbi_ref_treemodel);
+    kbi_combobox_instruments.set_size_request(300, 50);
     kbi_combobox_instruments.pack_start(kbi_columns.kbi_instruments_name);
     kbi_combobox_instruments.signal_changed().connect(
             sigc::mem_fun(*this, &KbiWindow::on_combobox));

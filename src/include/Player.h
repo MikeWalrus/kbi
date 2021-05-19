@@ -17,7 +17,7 @@
 
 class Voice;
 
-class Instrument;
+class SamplerVoice;
 
 class Player {
 public:
@@ -57,6 +57,16 @@ public:
             os << static_cast<char>(note.letter) << note.number << (note.sharp ? '#' : ' ');
             return os;
         }
+
+        std::string to_string() const;
+    };
+
+    struct Keys {
+        constexpr static char uri[]{"sample_uri"};
+        constexpr static char base_note[]{"base_note"};
+        constexpr static char beg[]{"loop_beg"};
+        constexpr static char end[]{"loop_end"};
+        constexpr static const char* adsr[]{"attack", "decay", "sustain", "release"};
     };
 
     explicit Player(void** stream, double* output);
@@ -87,11 +97,9 @@ public:
 
     void set_instrument(const string& name);
 
-    void next_instrument();
-
     const string& get_current_instrument();
 
-    vector<string> get_all_instruments();
+    std::vector<Glib::ustring> get_all_instruments();
 
 private:
     PaStream** stream;
@@ -99,7 +107,7 @@ private:
     map<Note, Voice*> voices;
     mutable mutex voices_guard;
     decltype(voices)::size_type voices_limit = 0; // Maximum number of voices. 0 means no limits.
-    map<std::string, Instrument> instruments;
+    string current_instrument_name;
 
     void start() const;
 
@@ -107,15 +115,21 @@ private:
 
     void clear_voices();
 
-    decltype(instruments.begin()) current_instrument;
-
-    void set_instrument(map<string, Instrument>::iterator iterator);
-
     void load_key_file();
 
-    Glib::RefPtr<Glib::KeyFile> instrument_key_file;
+    Glib::RefPtr<Glib::KeyFile> key_file;
 
     void load_builtin_instruments();
+
+    unique_ptr<Voice> get_prototype(const string& name);
+
+    void save_key_file();
+
+    void load_loop(const string& name, SamplerVoice* sampler_voice);
+
+    array<int, 4> load_adsr(const string& name) const;
+
+    Note load_base_note(const string& name) const;
 };
 
 class Voice {
@@ -208,10 +222,11 @@ public:
     };
 
     typedef vector<double>::const_iterator Sample_iterator;
+    typedef array<long, 2> Loop;
 
-    void load(const string& sample_dir);
+    void load(const string& sample_uri);
 
-    array<long, 2> find_loop();
+    [[nodiscard]] Loop find_loop();
 
     double output_something() override;
 
@@ -236,7 +251,7 @@ private:
 
     Sample_iterator find_next_zero_cross(vector<double>::const_iterator iterator);
 
-    static void display_wave(Sample_iterator begin, Sample_iterator end);
+    [[maybe_unused]] static void display_wave(Sample_iterator begin, Sample_iterator end);
 
     double how_close(Sample_iterator begin, Sample_iterator end);
 
@@ -245,22 +260,6 @@ private:
     long loop_begin{};
     long loop_end{};
     long loop_length{};
-};
-
-class Instrument {
-public:
-    Instrument(const Voice::Adsr& adsr, string sample_dir, Player::Note base_note)
-            :adsr(adsr), sample_dir(std::move(sample_dir)), base_note(base_note) { }
-
-    Instrument() = default;
-
-    [[nodiscard]] unique_ptr<Voice> get_prototype();
-
-private:
-    Voice::Adsr adsr{};
-    std::string sample_dir;
-    Player::Note base_note;
-    array<long, 2> sample_loop{};
 };
 
 template<class T>

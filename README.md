@@ -1,13 +1,17 @@
-# How to compile?
+# How to compile `kbi`?
+
 ## Linux
+
 Make sure you have portaudio and gtkmm-4.0 installed and open this project in any IDE that supports CMake.
 
 ## Windows
-### 1. Install MSYS2: https://www.msys2.org/
+
+### 1. Install [MSYS2](https://www.msys2.org/)
 
 ### 2. Open msys2.exe
 
-    Run theses commands to install some packages.
+Run theses commands to install some packages.
+
 ```
 pacman -S mingw-w64-x86_64-cmake mingw-w64-x86_64-extra-cmake-modules
 pacman -S mingw-w64-x86_64-make
@@ -18,30 +22,47 @@ pacman -S mingw-w64-x86_64-gtkmm4
 ```
 
 ### 3. Environment variable
+
 Add `...\mingw64\bin` in your MSYS2 directory to the `path` environment variable.
 
 ### 4. Open CLion (I don't know the exact steps to configure other IDEs)
 
-   Set the toolchain to mingw if it is not the default toolchain.
+Set the toolchain to mingw if it is not the default toolchain.
 
 ### 5. Build and run
 
-   If it fails, comment out the line with something like `WIN32` in the header file where the error occurs.
+If it fails, comment out the line with something like `WIN32` in the header file where the error occurs.
 
 ## macOS
+
 ### 1. Install portaudio and gtkmm-4.0 using Homebrew
 
 ```shell
 brew install portaudio gtkmm4
 ```
 
-Also please install `pkg-config` with Homebrew if you don't have it already
+Also, please install `pkg-config` with Homebrew if you don't have it already
 
 ### 2. Check that directory `/usr/local/lib` is in [`CMAKE_SYSTEM_PREFIX_PATH`](http://www.cmake.org/cmake/help/v2.8.12/cmake.html#variable:CMAKE_SYSTEM_PREFIX_PATH)
 
 ### 3. Build and run with cmake
 
+## Cannot compile with `gcc` 11
+
+This is caused by [some obsolete headers](https://gitlab.gnome.org/GNOME/glibmm/-/merge_requests/50) in `glibmm`. You
+can either go back to `gcc` 10 or modify some files.
+
+To compile with gcc 11 before the updated version is released and without building `glibmm` from the repository:
+
+1. find `variant.h` and `variant_basictypes.h` in your (possibly in mingw64 if you're on
+   Windows) `/usr/include/glibmm-2.68/glibmm`.
+
+2. Substitute all occurrence of `Variant<`(anything)`>()` with just `Variant()`.
+
+   You can do this in vim with `:%s/Variant<.*>()/Variant()/g`.
+
 # References
+
 gtkmm图形界面的教程
 https://developer.gnome.org/gtkmm-tutorial/unstable/gtkmm-tutorial.html#sec-gtkmm
 

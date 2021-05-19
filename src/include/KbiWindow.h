@@ -68,6 +68,10 @@ private:
     Glib::RefPtr<Gtk::ListStore> kbi_ref_treemodel;
     shared_ptr<Gtk::Settings> settings;
 
+    static void box_append(Gtk::Box& box, Gtk::Widget& widget1, Gtk::Widget& widget2);
+
+    static void box_append(Gtk::Box& box, Gtk::Widget& widget1, Gtk::Widget& widget2, Gtk::Widget& widget3);
+
     static void init_widget(Gtk::Widget& widget);
 
     void load_instrument_tree_model();

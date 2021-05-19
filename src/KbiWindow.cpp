@@ -27,22 +27,16 @@ KbiWindow::KbiWindow(Player* p_player)
     set_child(kbi_vbox_top);
     set_title("kbi");
     set_default_size(KbiWindow::kbi_window_width, KbiWindow::kbi_window_height);
-    kbi_vbox_top.append(kbi_vbox_draw);
-    kbi_vbox_top.append(kbi_hbox_instruments_setting);
-    kbi_vbox_top.append(kbi_hbox_button);
+    box_append(kbi_vbox_top, kbi_vbox_draw, kbi_hbox_instruments_setting, kbi_hbox_button);
     kbi_vbox_draw.set_size_request(KbiWindow::kbi_window_width, KbiWindow::kbi_window_height - 200);
     kbi_vbox_draw.set_expand(true);
     kbi_vbox_draw.append(kbi_draw);
-    kbi_hbox_instruments_setting.append(kbi_hbox_switch);
-    kbi_hbox_instruments_setting.append(kbi_hbox_combobox);
-    kbi_hbox_button.append(kbi_button_control_play_or_stop);
-    kbi_hbox_button.append(kbi_button_quit);
-    kbi_hbox_switch.append(*Gtk::make_managed<Gtk::Label>("Polyphonic", 0));
-    kbi_hbox_switch.append(kbi_switch_control_voices_limit);
+    box_append(kbi_hbox_instruments_setting, kbi_hbox_switch, kbi_hbox_combobox);
+    box_append(kbi_hbox_button, kbi_button_control_play_or_stop, kbi_button_quit);
+    box_append(kbi_hbox_switch, *Gtk::make_managed<Gtk::Label>("Polyphonic", 0), kbi_switch_control_voices_limit);
     kbi_hbox_switch.set_margin_start(10);
     kbi_hbox_switch.set_margin_end(10);
-    kbi_hbox_combobox.append(*Gtk::make_managed<Gtk::Label>("Instruments", 0));
-    kbi_hbox_combobox.append(kbi_combobox_instruments);
+    box_append(kbi_hbox_combobox, *Gtk::make_managed<Gtk::Label>("Instruments", 0), kbi_combobox_instruments);
 
     //set kbi_button_control_play_or_stop
     init_widget(kbi_button_control_play_or_stop);
@@ -83,6 +77,19 @@ void KbiWindow::load_instrument_tree_model()
         row[kbi_columns.kbi_instruments_name] = name;
     }
     kbi_combobox_instruments.set_active(0);
+}
+
+void KbiWindow::box_append(Gtk::Box& box, Gtk::Widget& widget1, Gtk::Widget& widget2)
+{
+    box.append(widget1);
+    box.append(widget2);
+}
+
+void KbiWindow::box_append(Gtk::Box& box, Gtk::Widget& widget1, Gtk::Widget& widget2, Gtk::Widget& widget3)
+{
+    box.append(widget1);
+    box.append(widget2);
+    box.append(widget3);
 }
 
 void KbiWindow::init_widget(Gtk::Widget& widget)

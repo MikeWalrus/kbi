@@ -10,6 +10,7 @@
 #include <mutex>
 #include <memory>
 #include <utility>
+#include <array>
 #include <glibmm/keyfile.h>
 #include "portaudio.h"
 #include "maximilian.h"

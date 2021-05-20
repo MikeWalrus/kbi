@@ -268,7 +268,7 @@ std::vector<typename T::key_type> get_all_keys(const T& m)
 {
     std::vector<typename T::key_type> ret;
     ret.reserve(m.size());
-    for_each(m.begin(), m.end(), [&ret](class T::value_type pair) { ret.push_back(pair.first); });
+    for_each(m.begin(), m.end(), [&ret](typename T::value_type pair) { ret.push_back(pair.first); });
     return ret;
 }
 

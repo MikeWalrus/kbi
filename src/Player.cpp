@@ -117,10 +117,13 @@ void Player::note_off(const Note& note)
     }
 }
 
-vector<Player::Note> Player::get_current_notes() const
+vector<pair<Player::Note, bool>> Player::get_current_notes() const
 {
     scoped_lock<mutex> lock(voices_guard);
-    return get_all_keys(voices);
+    vector<pair<Note, bool>> ret;
+    ret.reserve(voices.size());
+    for_each(voices.begin(), voices.end(), [&ret](auto i) { ret.push_back({i.first, i.second->isOn()}); });
+    return ret;
 }
 
 void Player::load_instruments()

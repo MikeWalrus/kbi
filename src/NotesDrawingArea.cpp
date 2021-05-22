@@ -49,7 +49,7 @@ void NotesDrawingArea::draw_rectangle(const Cairo::RefPtr<Cairo::Context>& cr, i
 void NotesDrawingArea::draw_text(const shared_ptr<Cairo::Context> cr, int rectangle_width, int rectangle_height)
 {
     int text_width, text_height;
-    layout->set_markup(get_span_tag(get_tagged(player->get_current_instrument(), "i"), "#b3ff70"));
+    layout->set_markup(get_span_tag(get_tagged(player->get_current_instrument(), "i"), green));
     layout->get_pixel_size(text_width, text_height);
     double instrument_x = (rectangle_width - text_width)/2.;
     double instrument_y = 20;
@@ -58,9 +58,12 @@ void NotesDrawingArea::draw_text(const shared_ptr<Cairo::Context> cr, int rectan
     layout->show_in_cairo_context(cr);
     std::stringstream draw_note;
     auto current_notes = player->get_current_notes();
-    for (const auto& note : current_notes) {
-        draw_note << get_span_tag(string{static_cast<char>(note.letter)}, "#7ac6ff")
-                  << get_span_tag(get_tagged(to_string(note.number) + (note.sharp ? "#" : ""), "sub"), "#42f5b3")
+    for (const auto& i : current_notes) {
+        auto& note = i.first;
+        bool isOn = i.second;
+        draw_note << get_span_tag(string{static_cast<char>(note.letter)}, isOn ? blue : grey)
+                  << get_span_tag(get_tagged(to_string(note.number) + (note.sharp ? "#" : ""), "sub"),
+                          isOn ? bluish_green : grey)
                   << " ";
     }
     string notes = draw_note.str();
@@ -126,7 +129,8 @@ ElasticRect::draw_border(Cairo::RefPtr<Cairo::Context> context, double target_wi
 }
 
 void
-ElasticRect::draw_rect_fill(Cairo::RefPtr<Cairo::Context> context, double target_width, double target_height, double x, double y,
+ElasticRect::draw_rect_fill(Cairo::RefPtr<Cairo::Context> context, double target_width, double target_height, double x,
+        double y,
         double factor)
 {
     update_rect(context, target_width, target_height, x, y, factor);
@@ -157,8 +161,8 @@ void ElasticRect::update_size(double& size, double target_size, double factor)
     size += (target_size + margin - size)*factor;
 }
 
-void ElasticRect::fill_rect(Cairo::RefPtr<Cairo::Context>& context) const
+void ElasticRect::fill_rect(Cairo::RefPtr<Cairo::Context>& context)
 {
-context->set_source_rgb(0.2, 0.2, 0.2);
-context->fill();
+    context->set_source_rgb(0.2, 0.2, 0.2);
+    context->fill();
 }

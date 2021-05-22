@@ -26,8 +26,6 @@ void NotesDrawingArea::on_draw(const Cairo::RefPtr<Cairo::Context>& cr, int widt
     // Draw a black rectangle
     draw_rectangle(cr, width, height);
 
-    // and some white text
-    cr->set_source_rgb(1.0, 1.0, 1.0);
     draw_text(cr, width, height);
 
     Cairo::Matrix matrix(1.0, 0.0, 0.0, -1.0, 0.0, height);

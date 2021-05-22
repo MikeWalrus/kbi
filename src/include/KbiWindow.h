@@ -43,7 +43,7 @@ private:
 
     int kbi_window_width = 600;            //decide window's width
     int kbi_window_height = 700;           //decide window's height
-    Gtk::Box kbi_box_top, kbi_box1, kbi_box2, kbi_box_switch, kbi_box_combobox;
+    Gtk::Box kbi_vbox_top, kbi_vbox_draw, kbi_hbox_button, kbi_hbox_switch, kbi_hbox_instruments_setting, kbi_hbox_combobox;
     Gtk::Button kbi_button_control_play_or_stop, kbi_button_quit;
     Gtk::Switch kbi_switch_control_voices_limit;
 
@@ -68,7 +68,11 @@ private:
     Glib::RefPtr<Gtk::ListStore> kbi_ref_treemodel;
     shared_ptr<Gtk::Settings> settings;
 
-    static void init_button(Gtk::Button& bu);
+    static void box_append(Gtk::Box& box, Gtk::Widget& widget1, Gtk::Widget& widget2);
+
+    static void box_append(Gtk::Box& box, Gtk::Widget& widget1, Gtk::Widget& widget2, Gtk::Widget& widget3);
+
+    static void init_widget(Gtk::Widget& widget);
 
     void load_instrument_tree_model();
 };

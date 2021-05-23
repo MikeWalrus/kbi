@@ -15,6 +15,7 @@
 #include <gtkmm/combobox.h>
 #include <functional>
 #include <map>
+#include <utility>
 #include <gtkmm/liststore.h>
 #include "portaudio.h"
 #include "Ctrl.h"
@@ -23,6 +24,40 @@
 #include "NotesDrawingArea.h"
 
 class Player;
+
+class ModelColumns : public Gtk::TreeModel::ColumnRecord {
+public:
+    ModelColumns()
+    {
+        add(names);
+    }
+
+    Gtk::TreeModelColumn<std::string> names;
+};
+
+struct MyComboBox {
+    ModelColumns columns;
+    Gtk::ComboBox combo_box;
+    Glib::RefPtr<Gtk::ListStore> tree;
+    std::function<void(const std::string&)> functor;
+
+    explicit MyComboBox(std::function<void(const std::string&)> changeSomething, const vector<Glib::ustring>& names)
+            :tree(Gtk::ListStore::create(columns)), functor(std::move(changeSomething))
+    {
+        combo_box.set_model(tree);
+        combo_box.set_size_request(300, 50);
+        combo_box.pack_start(columns.names);
+        combo_box.signal_changed().connect(sigc::mem_fun(*this, &MyComboBox::on_change));
+        load_tree_model(names);
+    }
+
+private:
+    void on_change();
+
+    void load_tree_model(const vector<Glib::ustring>& names);
+
+
+};
 
 class KbiWindow : public Gtk::Window {
 public:
@@ -37,8 +72,6 @@ protected:
 
     void on_switch_control_voices_limit_clicked();
 
-    void on_combobox();
-
 private:
 
     int kbi_window_width = 600;            //decide window's width
@@ -50,22 +83,10 @@ private:
     Player* player;
     NotesDrawingArea kbi_draw;
     typedef function<shared_ptr<Ctrl>(Player*)> CtrlFactoryMethod;
-    const std::map<string, CtrlFactoryMethod> controllers = {{"default", Controller::create}};
+    const std::map<Glib::ustring, CtrlFactoryMethod> controllers = {{"default", Controller::create}};
     shared_ptr<Ctrl> controller;
 
-    class ModelColumns : public Gtk::TreeModel::ColumnRecord {
-    public:
-        ModelColumns()
-        {
-            add(kbi_instruments_name);
-        }
-
-        Gtk::TreeModelColumn<std::string> kbi_instruments_name;
-    };
-
-    ModelColumns kbi_columns;
-    Gtk::ComboBox kbi_combobox_instruments;
-    Glib::RefPtr<Gtk::ListStore> kbi_ref_treemodel;
+    MyComboBox ins, ctrl;
     shared_ptr<Gtk::Settings> settings;
 
     static void box_append(Gtk::Box& box, Gtk::Widget& widget1, Gtk::Widget& widget2);
@@ -74,11 +95,9 @@ private:
 
     static void init_widget(Gtk::Widget& widget);
 
-    void load_instrument_tree_model();
+    void set_control(const Glib::ustring& name);
 };
 
 void setup();//use this to do any initialisation if you want.
-
-void play(double* output);//run dac! Very very often. Too often in fact. er...
 
 #endif //KBI_KBIWINDOW_H

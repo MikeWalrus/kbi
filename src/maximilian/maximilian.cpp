@@ -203,7 +203,7 @@ double mtofarray[129]={0, 8.661957, 9.177024, 9.722718, 10.3, 10.913383, 11.5623
 
 void setup();//use this to do any initialisation if you want.
 
-void play(double *channels);//run dac!
+//run dac!
 
 maxiOsc::maxiOsc(){
 	//When you create an oscillator, the constructor sets the phase of the oscillator to 0.

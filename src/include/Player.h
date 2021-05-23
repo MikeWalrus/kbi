@@ -61,7 +61,7 @@ public:
             return os;
         }
 
-        std::string to_string() const;
+        [[nodiscard]] std::string to_string() const;
     };
 
     struct Keys {
@@ -92,6 +92,8 @@ public:
 
     void note_off(const Note& note);
 
+    void clear_voices();
+
     void set_voices_limit(int voices_number);
 
     static double noteToFrequency(const Note& note);
@@ -115,8 +117,6 @@ private:
     void start() const;
 
     void load_instruments();
-
-    void clear_voices();
 
     void load_key_file();
 

@@ -8,15 +8,18 @@
 Player::Player(void** stream, double* output)
         :stream(stream), output(output)
 {
+    auto data_dir = Gio::File::create_for_path(Glib::get_user_data_dir() + "/kbi");
+    if (!data_dir->query_exists())
+        data_dir->make_directory();
     load_instruments();
-    instruments[string("Sine Wave")] = Instrument({10, 10, 100, 1000}, "sine", Player::Note());
-    set_instrument(instruments.begin()->first);
+    set_instrument(*get_all_instruments().begin());
 }
 
 Player::~Player()
 {
     stop();
     Pa_CloseStream(*stream);
+    save_key_file();
 }
 
 // Return whether is playing.
@@ -77,7 +80,7 @@ void Player::play()
 }
 
 // calculate the frequency of a note
-// Note that this doesn't check if the note is valid.
+// Note that this doesn't check whether the note is valid.
 double Player::noteToFrequency(const Note& note)
 {
     int scale[7] = {0, 2, 3, 5, 7, 8, 10};
@@ -122,19 +125,28 @@ vector<Player::Note> Player::get_current_notes() const
 
 void Player::load_instruments()
 {
+    load_key_file();
+    load_builtin_instruments();
+}
+
+void Player::load_builtin_instruments()
+{
     char dir_prefix[] = "/kbi/instruments/";
     auto children_str = Gio::Resource::enumerate_children_global(dir_prefix);
     for (auto str : children_str) {
         Voice::Adsr adsr{10, 10, 100, 1000};
-        std::string dir = dir_prefix + str;
+        string dir = string("resource://") + dir_prefix + str;
         replace(str.begin(), str.end(), '.', ' ');
         replace(str.begin(), str.end(), '_', ' ');
         stringstream ss(str);
-        std::string name;
-        Player::Note base_note;
+        string name;
+        Note base_note;
         ss >> name;
         ss >> base_note;
-        instruments[name] = {adsr, dir, base_note};
+
+        key_file->set_string(name, "sample_uri", dir);
+        key_file->set_string(name, "base_note", base_note.to_string());
+        key_file->set_comment(name, "builtin instrument: " + name);
     }
 }
 
@@ -153,23 +165,27 @@ double SamplerVoice::output_something()
     return sample_output;
 }
 
-void SamplerVoice::load(const string& sample_dir)
+void SamplerVoice::load(const string& sample_uri)
 {
+    using namespace Gio;
     try {
-        auto sample_bytes = Gio::Resource::lookup_data_global(sample_dir);
-        gsize size;
-        auto beg = static_cast<const char*>(sample_bytes->get_data(size));
-        membuf buf(beg, beg + size);
+        auto sample_file = File::create_for_uri(sample_uri);
+        auto size = sample_file->query_info()->get_size();
+        auto buffer = new char[size];
+        gsize loaded_size;
+        sample_file->load_contents(buffer, loaded_size);
+        membuf buf(buffer, buffer + size);
         istream in(&buf);
         sample.load(in);
+        delete[] buffer;
     }
-    catch (Gio::ResourceError& error) {
+    catch (ResourceError& error) {
         cout << error.what() << endl;
         throw;
     }
 }
 
-array<long, 2> SamplerVoice::find_loop()
+SamplerVoice::Loop SamplerVoice::find_loop()
 {
     auto start = find_zero_cross_near(
             std::next(sample.amplitudes->cbegin(), static_cast<long>(sample.amplitudes->size()*2/3)));
@@ -217,7 +233,7 @@ SamplerVoice::Sample_iterator SamplerVoice::find_next_zero_cross(Sample_iterator
     return find_zero_cross_near(iterator + 100);
 }
 
-void SamplerVoice::display_wave(SamplerVoice::Sample_iterator begin, SamplerVoice::Sample_iterator end)
+[[maybe_unused]] void SamplerVoice::display_wave(SamplerVoice::Sample_iterator begin, SamplerVoice::Sample_iterator end)
 {
     for (auto it = begin; it < end; it += 3) {
         for (int i = 0; i < (*it + 1)*50; ++i) {
@@ -267,32 +283,22 @@ std::istream& operator>>(istream& is, Player::Note& note)
     return is;
 }
 
+std::string Player::Note::to_string() const
+{
+    return static_cast<char>(letter) + std::to_string(number) + (sharp ? "#" : " ");
+}
+
 void Player::set_instrument(const string& name)
 {
-    auto instrument = instruments.find(name);
-    set_instrument(instrument);
+    scoped_lock<mutex> lock(voices_guard);
+    clear_voices();
+    voice_prototype = get_prototype(name);
+    current_instrument_name = name;
 }
 
-std::vector<string> Player::get_all_instruments()
+std::vector<Glib::ustring> Player::get_all_instruments()
 {
-    return get_all_keys(instruments);
-}
-
-unique_ptr<Voice> Instrument::get_prototype()
-{
-    Voice* voice;
-    if (sample_dir.find("/kbi") == string::npos) {
-        voice = new SynthVoice();
-    }
-    else {
-        auto samplerVoice = new SamplerVoice(adsr, base_note);
-        samplerVoice->load(sample_dir);
-        if (!sample_loop[0])
-            sample_loop = samplerVoice->find_loop();
-        samplerVoice->set_loop(sample_loop);
-        voice = samplerVoice;
-    }
-    return unique_ptr<Voice>(voice);
+    return key_file->get_groups();
 }
 
 void Player::set_voices_limit(int voices_number)
@@ -300,23 +306,83 @@ void Player::set_voices_limit(int voices_number)
     Player::voices_limit = voices_number;
 }
 
-void Player::next_instrument()
-{
-    if (++current_instrument == instruments.end())
-        current_instrument = instruments.begin();
-    set_instrument(current_instrument);
-}
-
-void Player::set_instrument(map<string, Instrument>::iterator iterator)
-{
-    scoped_lock<mutex> lock(voices_guard);
-    clear_voices();
-    voice_prototype = iterator->second.get_prototype();
-    current_instrument = iterator;
-}
-
 const string& Player::get_current_instrument()
 {
-    return current_instrument->first;
+    return current_instrument_name;
+}
+
+void Player::load_key_file()
+{
+    using namespace Glib;
+    key_file = KeyFile::create();
+    string full_path;
+    try {
+        key_file->load_from_data_dirs("kbi/instruments.conf", full_path);
+    }
+    catch (KeyFileError& error) {
+        // if instruments.conf doesn't exist, load the default file
+        auto default_file = Gio::Resource::lookup_data_global("/kbi/instruments.conf");
+        gsize size;
+        auto default_file_ptr = static_cast<const char*>(default_file->get_data(size));
+        string default_file_str{default_file_ptr, default_file_ptr + default_file->get_size()};
+        key_file->load_from_data(default_file_str);
+    }
+}
+
+void Player::save_key_file() { key_file->save_to_file(Glib::get_user_data_dir() + "/kbi/instruments.conf"); }
+
+unique_ptr<Voice> Player::get_prototype(const string& name)
+{
+    using namespace Glib;
+    if (key_file->has_key(name, Keys::uri)) {
+        auto uri = key_file->get_string(name, Keys::uri);
+        Player::Note base_note = load_base_note(name);
+        Voice::Adsr adsr = load_adsr(name);
+        auto* sampler_voice = new SamplerVoice(adsr, base_note);
+        sampler_voice->load(uri);
+        load_loop(name, sampler_voice);
+
+        return unique_ptr<Voice>(sampler_voice);
+    }
+    return unique_ptr<Voice>(new SynthVoice);
+}
+
+Player::Note Player::load_base_note(const string& name) const
+{
+    Note base_note;
+    auto base_note_str = key_file->get_string(name, Keys::base_note);
+    stringstream ss(base_note_str);
+    ss >> base_note;
+    return base_note;
+}
+
+Voice::Adsr Player::load_adsr(const string& name) const
+{
+    Voice::Adsr default_adsr{10, 20, 100, 1000};
+    Voice::Adsr adsr;
+    for (int i = 0; i < 4; ++i) {
+        if (!key_file->has_key(name, Keys::adsr[i])) {
+            adsr = default_adsr;
+            cout << "Default adsr" << endl;
+            break;
+        }
+        adsr[i] = key_file->get_integer(name, Keys::adsr[i]);
+    }
+    return adsr;
+}
+
+void Player::load_loop(const string& name, SamplerVoice* sampler_voice)
+{
+    SamplerVoice::Loop loop;
+    if (!key_file->has_key(name, Keys::beg)) {
+        loop = sampler_voice->find_loop();
+        key_file->set_int64(name, Keys::beg, loop[0]);
+        key_file->set_int64(name, Keys::end, loop[1]);
+    }
+    else {
+        loop[0] = key_file->get_int64(name, Keys::beg);
+        loop[1] = key_file->get_int64(name, Keys::end);
+    }
+    sampler_voice->set_loop(loop);
 }
 

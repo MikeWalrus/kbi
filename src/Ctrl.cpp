@@ -2,8 +2,10 @@
 // Created by mike on 4/21/21.
 //
 
-#include <Player.h>
+#include <gtkmm/filechooserdialog.h>
+#include "Player.h"
 #include "Ctrl.h"
+#include "KbiWindow.h"
 
 Ctrl::Ctrl(Player* p_player)
         :ctrl_key(Gtk::EventControllerKey::create()), player(p_player)
@@ -12,7 +14,7 @@ Ctrl::Ctrl(Player* p_player)
     Ctrl::ctrl_key->signal_key_released().connect(sigc::mem_fun(*this, &Ctrl::on_key_released), false);
 }
 
-bool Controller::hasGotNote(guint keyVal, const Gdk::ModifierType& state, Player::Note& note)
+bool LinearCtrl::hasGotNote(guint keyVal, const Gdk::ModifierType& state, Player::Note& note)
 {
     int key_letter = keyVal - GDK_KEY_a + 'a';
     key_letter = tolower(key_letter);
@@ -44,10 +46,10 @@ bool Controller::hasGotNote(guint keyVal, const Gdk::ModifierType& state, Player
     return false;
 }
 
-void Controller::on_key_released(guint keyVal, guint, Gdk::ModifierType state)
+void LinearCtrl::on_key_released(guint keyVal, guint, Gdk::ModifierType state)
 {
     Player::Note note;
-    if (Controller::hasGotNote(keyVal, state, note)) {
+    if (LinearCtrl::hasGotNote(keyVal, state, note)) {
         for (int i = 2; i <= 6; i++) {
             note.number = i;
             get_player()->note_off(note);
@@ -55,7 +57,7 @@ void Controller::on_key_released(guint keyVal, guint, Gdk::ModifierType state)
     }
 }
 
-bool Controller::on_key_pressed(guint keyVal, guint, Gdk::ModifierType state)
+bool LinearCtrl::on_key_pressed(guint keyVal, guint, Gdk::ModifierType state)
 {
 #ifdef SCIENTIFIC_NOTATION
     if (keyVal>=GDK_KEY_a && keyVal<=GDK_KEY_g) {
@@ -70,14 +72,44 @@ bool Controller::on_key_pressed(guint keyVal, guint, Gdk::ModifierType state)
     }
 #else
     Player::Note note;
-    if (Controller::hasGotNote(keyVal, state, note)) {
+    if (LinearCtrl::hasGotNote(keyVal, state, note)) {
         get_player()->note_on(note);
     }
 #endif
     return true;
 }
 
-shared_ptr<Ctrl> Controller::create(Player* p_player)
+ScoreCtrl::ScoreCtrl(Player* p_player, KbiWindow* window)
+        :Ctrl(p_player), main_window(window)
 {
-    return make_shared<Controller>(p_player);
+    auto dialog = new Gtk::FileChooserDialog("Please choose a file",
+            Gtk::FileChooser::Action::OPEN);
+    dialog->set_transient_for(*window);
+    dialog->set_modal(true);
+    dialog->add_button("_Cancel", Gtk::ResponseType::CANCEL)->set_margin(5);
+    dialog->add_button("_Open", Gtk::ResponseType::OK)->set_margin(5);
+    dialog->signal_response().connect(sigc::bind(
+            sigc::mem_fun(*this, &ScoreCtrl::on_file_dialog_response), dialog));
+
+    dialog->show();
+}
+
+void ScoreCtrl::on_file_dialog_response(int response_id, Gtk::FileChooserDialog* dialog)
+{
+    switch (response_id) {
+    case Gtk::ResponseType::OK: {
+        auto filename = dialog->get_file()->get_path();
+        break;
+    }
+    case Gtk::ResponseType::CANCEL: {
+        std::cout << "Cancel clicked." << std::endl;
+        main_window->reset_control();
+        break;
+    }
+    default: {
+        std::cout << "Unexpected button clicked." << std::endl;
+        break;
+    }
+    }
+    delete dialog;
 }

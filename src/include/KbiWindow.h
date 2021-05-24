@@ -65,6 +65,11 @@ public:
 
     ~KbiWindow() override;
 
+    void reset_control(){
+        set_control("Linear");
+        ctrl_combo_box.combo_box.set_active(0);
+    };
+
 protected:
     void on_button_control_play_or_stop_clicked();
 
@@ -83,10 +88,14 @@ private:
     Player* player;
     NotesDrawingArea kbi_draw;
     typedef function<shared_ptr<Ctrl>(Player*)> CtrlFactoryMethod;
-    const std::map<Glib::ustring, CtrlFactoryMethod> controllers = {{"default", Controller::create}};
+    const std::map<Glib::ustring, CtrlFactoryMethod> controllers = {{"Linear", LinearCtrl::create},
+                                                                    {"Score File", [this](auto&& PH1) {
+                                                                        return ScoreCtrl::create(
+                                                                                std::forward<decltype(PH1)>(PH1), this);
+                                                                    }}};
     shared_ptr<Ctrl> controller;
 
-    MyComboBox ins, ctrl;
+    MyComboBox instrument_combo_box, ctrl_combo_box;
     shared_ptr<Gtk::Settings> settings;
 
     static void box_append(Gtk::Box& box, Gtk::Widget& widget1, Gtk::Widget& widget2);

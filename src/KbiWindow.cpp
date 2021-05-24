@@ -18,9 +18,10 @@ KbiWindow::KbiWindow(Player* p_player)
         kbi_button_quit("Close"),
         player(p_player),
         kbi_draw(p_player),
-        controller(controllers.at("default")(p_player)),
-        ins([p_player](const string& s) { p_player->set_instrument(s); }, p_player->get_all_instruments()),
-        ctrl([this](const string& s) { set_control(s); }, get_all_keys(controllers)),
+        controller(nullptr),
+        instrument_combo_box([p_player](const string& s) { p_player->set_instrument(s); },
+                p_player->get_all_instruments()),
+        ctrl_combo_box([this](const string& s) { set_control(s); }, get_all_keys(controllers)),
         settings(Gtk::Settings::get_default())
 {
     settings->property_gtk_application_prefer_dark_theme().set_value(TRUE);
@@ -38,8 +39,8 @@ KbiWindow::KbiWindow(Player* p_player)
     box_append(kbi_hbox_switch, *Gtk::make_managed<Gtk::Label>("Polyphonic", 0), kbi_switch_control_voices_limit);
     kbi_hbox_switch.set_margin_start(10);
     kbi_hbox_switch.set_margin_end(10);
-    box_append(kbi_hbox_combobox, *Gtk::make_managed<Gtk::Label>("Instruments", 0), ins.combo_box);
-    box_append(kbi_hbox_combobox, *Gtk::make_managed<Gtk::Label>("Controls", 0), ctrl.combo_box);
+    box_append(kbi_hbox_combobox, *Gtk::make_managed<Gtk::Label>("Instruments", 0), instrument_combo_box.combo_box);
+    box_append(kbi_hbox_combobox, *Gtk::make_managed<Gtk::Label>("Controls", 0), ctrl_combo_box.combo_box);
 
     //set kbi_button_control_play_or_stop
     init_widget(kbi_button_control_play_or_stop);
@@ -60,8 +61,8 @@ KbiWindow::KbiWindow(Player* p_player)
     kbi_switch_control_voices_limit.property_active().signal_changed().connect(
             sigc::mem_fun(*this, &KbiWindow::on_switch_control_voices_limit_clicked));
 
-    init_widget(ins.combo_box);
-    init_widget(ctrl.combo_box);
+    init_widget(instrument_combo_box.combo_box);
+    init_widget(ctrl_combo_box.combo_box);
 
     setup();
 }
@@ -117,7 +118,12 @@ void KbiWindow::on_switch_control_voices_limit_clicked()
 void KbiWindow::set_control(const Glib::ustring& name)
 {
     player->clear_voices();
-    controller = controllers.at(name)(player);
+    auto prev = controller;
+    if ((controller = controllers.at(name)(player)) != prev) {
+        add_controller(controller->get_ctrl_key());
+        if (prev)
+            remove_controller(prev->get_ctrl_key());
+    }
 }
 
 KbiWindow::~KbiWindow()

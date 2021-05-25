@@ -10,6 +10,7 @@
 #include <mutex>
 #include <memory>
 #include <utility>
+#include <array>
 #include <glibmm/keyfile.h>
 #include "portaudio.h"
 #include "maximilian.h"
@@ -44,12 +45,14 @@ public:
         auto operator<=>(const Note&) const = default;
 
 #else
+
         bool operator<(const Note& note) const
         {
-            tuple<int,int,bool> lhs = {letter, number, sharp};
-            tuple<int,int,bool> rhs = {note.letter, note.number, note.sharp};
+            tuple<int, int, bool> lhs = {letter, number, sharp};
+            tuple<int, int, bool> rhs = {note.letter, note.number, note.sharp};
             return lhs < rhs;
         }
+
 #endif
 
         friend ostream& operator<<(ostream& os, const Note& note)
@@ -93,7 +96,7 @@ public:
 
     static double noteToFrequency(const Note& note);
 
-    [[nodiscard]] vector<Note> get_current_notes() const;
+    [[nodiscard]] vector<pair<Player::Note, bool>> get_current_notes() const;
 
     void set_instrument(const string& name);
 
@@ -193,6 +196,11 @@ public:
     {
         return freq;
     }
+
+    [[nodiscard]] bool isOn() const
+    {
+        return env.trigger;
+    }
 };
 
 class SynthVoice : public Voice {
@@ -267,7 +275,7 @@ std::vector<typename T::key_type> get_all_keys(const T& m)
 {
     std::vector<typename T::key_type> ret;
     ret.reserve(m.size());
-    for_each(m.begin(), m.end(), [&ret](class T::value_type pair) { ret.push_back(pair.first); });
+    for_each(m.begin(), m.end(), [&ret](typename T::value_type pair) { ret.push_back(pair.first); });
     return ret;
 }
 

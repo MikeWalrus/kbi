@@ -79,6 +79,7 @@ protected:
 
 private:
 
+    bool is_playing = false;
     int kbi_window_width = 600;            //decide window's width
     int kbi_window_height = 700;           //decide window's height
     Gtk::Box kbi_vbox_top, kbi_vbox_draw, kbi_hbox_button, kbi_hbox_switch, kbi_hbox_instruments_setting, kbi_hbox_combobox;
@@ -105,6 +106,7 @@ private:
     static void init_widget(Gtk::Widget& widget);
 
     void set_control(const Glib::ustring& name);
+
 };
 
 void setup();//use this to do any initialisation if you want.

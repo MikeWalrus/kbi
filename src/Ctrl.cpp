@@ -3,6 +3,9 @@
 //
 
 #include <gtkmm/filechooserdialog.h>
+#include <gtkmm/messagedialog.h>
+#include <glibmm/main.h>
+#include <mutex>
 #include "Player.h"
 #include "Ctrl.h"
 #include "KbiWindow.h"
@@ -92,6 +95,7 @@ ScoreCtrl::ScoreCtrl(Player* p_player, KbiWindow* window)
             sigc::mem_fun(*this, &ScoreCtrl::on_file_dialog_response), dialog));
 
     dialog->show();
+    Glib::signal_timeout().connect(sigc::mem_fun(*this, &ScoreCtrl::tick), tick_interval);
 }
 
 void ScoreCtrl::on_file_dialog_response(int response_id, Gtk::FileChooserDialog* dialog)
@@ -99,6 +103,13 @@ void ScoreCtrl::on_file_dialog_response(int response_id, Gtk::FileChooserDialog*
     switch (response_id) {
     case Gtk::ResponseType::OK: {
         auto filename = dialog->get_file()->get_path();
+        try {
+            parse_score(filename);
+        }
+        catch (runtime_error& error) {
+            cout << error.what() << endl;
+            main_window->reset_control();
+        }
         break;
     }
     case Gtk::ResponseType::CANCEL: {
@@ -112,4 +123,163 @@ void ScoreCtrl::on_file_dialog_response(int response_id, Gtk::FileChooserDialog*
     }
     }
     delete dialog;
+}
+
+void ScoreCtrl::parse_score(const string& file_name)
+{
+    ifstream file(file_name);
+    string line;
+    int line_num = 0;
+    while (getline(file, line)) {
+        ++line_num;
+        if (line.empty())
+            continue;
+        auto after_op = line.find(' ');
+        string args;
+        if (after_op == string::npos)
+            args = "";
+        else
+            args = string(line.cbegin() + static_cast<long>(after_op), line.cend());
+        auto op = line.substr(0, after_op);
+        try {
+            Operation operation = func_table.at(op);
+            Instruction i{operation, args, line_num};
+            score.push_back(i);
+        }
+        catch (...) {
+            throw std::runtime_error(get_error_msg(line_num, "invalid operation: " + op));
+        }
+    }
+    current_line = score.cbegin();
+}
+
+void ScoreCtrl::set_tempo(const string& arg)
+{
+    int temp_tempo;
+    try {
+        temp_tempo = stoi(arg);
+        tempo = temp_tempo;
+    }
+    catch (exception& error) {
+        throw std::runtime_error("tempo invalid");
+    }
+}
+
+void ScoreCtrl::note_on(const string& args)
+{
+    Player::Note note = getNote(args);
+    get_player()->note_on(note);
+}
+
+void ScoreCtrl::note_off(const string& args)
+{
+    Player::Note note = getNote(args);
+    get_player()->note_off(note);
+}
+
+Player::Note ScoreCtrl::getNote(const string& args)
+{
+    stringstream ss(args);
+    Player::Note note;
+    ss >> note;
+    return note;
+}
+
+void ScoreCtrl::run_score()
+{
+    has_started = true;
+    current_line = score.cbegin();
+}
+
+bool ScoreCtrl::tick()
+{
+    if (!has_started)
+        return true;
+    execute_delayed_tasks();
+    if (wait_ticks) {
+        wait_ticks--;
+        return true;
+    }
+    if (current_line != score.cend()) {
+        execute(*current_line);
+        current_line++;
+    }
+    return true;
+}
+
+void ScoreCtrl::execute_delayed_tasks()
+{
+    for (auto it = tasks.begin(); it != tasks.end();) {
+        if (!--(it->wait_ticks)) {
+            it->task();
+            it = tasks.erase(it);
+            continue;
+        }
+        ++it;
+    }
+}
+
+void ScoreCtrl::execute(const ScoreCtrl::Instruction& instruction)
+{
+    try {
+        (this->*instruction.op)(instruction.args);
+    }
+    catch (std::runtime_error& error) {
+        cout << get_error_msg(current_line->line, error.what()) << endl;
+        has_started = false;
+        main_window->reset_control();
+    }
+}
+
+void ScoreCtrl::wait(const string& args)
+{
+    stringstream ss(args);
+    double beats;
+    if (!(ss >> beats)) {
+        throw std::runtime_error("wait beats invalid");
+    }
+    wait(beats);
+}
+
+void ScoreCtrl::wait(double beats) { wait_ticks = get_ticks(beats); }
+
+int ScoreCtrl::get_ticks(double beats) const
+{
+    if (!tempo) {
+        throw std::runtime_error("tempo not set");
+    }
+    auto ms_per_beat = 60*1000/tempo;
+    auto ticks_per_beat = ms_per_beat/tick_interval;
+    return static_cast<int>(beats*ticks_per_beat);
+}
+
+string ScoreCtrl::get_error_msg(int line_num, const string& what)
+{
+    stringstream ss;
+    ss << "line " << line_num << ": " << what;
+    return ss.str();
+}
+
+void ScoreCtrl::note_auto(const string& args)
+{
+    stringstream ss(args);
+    Player::Note note;
+    double beats_before_off;
+    if (!(ss >> note >> beats_before_off))
+        throw std::runtime_error("note: invalid args");
+    string modifier;
+    if (!(ss >> modifier) || modifier != "and")
+        wait(beats_before_off);
+    auto player = get_player();
+    player->note_on(note);
+    cout << get_ticks(beats_before_off) << endl;
+    cout << beats_before_off << endl;
+    Task new_task{get_ticks(beats_before_off), [player, note]() { player->note_off(note); }};
+    tasks.push_back(new_task);
+}
+
+void ScoreCtrl::stop_everything()
+{
+    has_started = false;
+    get_player()->clear_voices();
 }

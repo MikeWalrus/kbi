@@ -8,6 +8,7 @@
 #include <gtkmm/eventcontrollerkey.h>
 #include <gtkmm/filechooserdialog.h>
 #include "Player.h"
+#include <functional>
 
 class KbiWindow;
 
@@ -24,6 +25,8 @@ public:
     {
         return player;
     }
+
+    virtual void stop_everything() { };
 
 private:
     Player* player;
@@ -64,14 +67,76 @@ public:
         return make_shared<ScoreCtrl>(p_player, window);
     }
 
+    void stop_everything() override;
+
 private:
-    bool on_key_pressed(guint keyVal, guint, Gdk::ModifierType state) override { return true; };
+    typedef void (ScoreCtrl::* Operation)(const string&);
+
+    struct Instruction {
+        Operation op;
+        string args;
+        int line;
+    };
+
+    KbiWindow* main_window;
+    std::vector<Instruction> score;
+    vector<Instruction>::const_iterator current_line;
+    std::map<std::string, Operation> func_table{
+            {"tempo",   &ScoreCtrl::set_tempo},
+            {"noteon",  &ScoreCtrl::note_on},
+            {"noteoff", &ScoreCtrl::note_off},
+            {"wait",    &ScoreCtrl::wait},
+            {"note",    &ScoreCtrl::note_auto}
+    };
+    int tempo{};
+    bool has_started = false;
+    int wait_ticks = 0;
+    int tick_interval = 100;
+    struct Task {
+        int wait_ticks;
+        function<void()> task;
+    };
+    std::vector<Task> tasks;
+
+    bool on_key_pressed(guint keyVal, guint, Gdk::ModifierType state) override
+    {
+        if (keyVal == GDK_KEY_s) {
+            run_score();
+        }
+        return true;
+    };
 
     void on_key_released(guint keyVal, guint, Gdk::ModifierType state) override { };
 
-    KbiWindow* main_window;
-
     void on_file_dialog_response(int response_id, Gtk::FileChooserDialog* dialog);
+
+    void parse_score(const string& file_name);
+
+    void set_tempo(const string& arg);
+
+    void note_on(const string& args);
+
+    void wait(const string& args);
+
+    void note_auto(const string& args);
+
+    bool tick();
+
+    void execute(const Instruction& instruction);
+
+    int get_ticks(double beats) const;
+
+    void run_score();
+
+    static string get_error_msg(int line_num, const string& what);
+
+    [[nodiscard]] static Player::Note getNote(const string& args);
+
+    void note_off(const string& args);
+
+    void execute_delayed_tasks();
+
+    void wait(double beats);
 };
 
 #endif //KBI_CTRL_H

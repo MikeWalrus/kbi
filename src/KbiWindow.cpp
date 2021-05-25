@@ -21,6 +21,7 @@ KbiWindow::KbiWindow(Player* p_player)
         controller(nullptr),
         instrument_combo_box([p_player](const string& s) { p_player->set_instrument(s); },
                 p_player->get_all_instruments()),
+        is_playing(false),
         ctrl_combo_box([this](const string& s) { set_control(s); }, get_all_keys(controllers)),
         settings(Gtk::Settings::get_default())
 {
@@ -91,8 +92,8 @@ void KbiWindow::init_widget(Gtk::Widget& widget)
 
 void KbiWindow::on_button_control_play_or_stop_clicked()
 {
-    bool isPlaying = player->toggle();
-    if (isPlaying) {
+    is_playing = player->toggle();
+    if (is_playing) {
         kbi_button_control_play_or_stop.set_label("Stop");
         add_controller(controller->get_ctrl_key());
     }
@@ -117,13 +118,13 @@ void KbiWindow::on_switch_control_voices_limit_clicked()
 
 void KbiWindow::set_control(const Glib::ustring& name)
 {
-    player->clear_voices();
-    auto prev = controller;
-    if ((controller = controllers.at(name)(player)) != prev) {
-        add_controller(controller->get_ctrl_key());
-        if (prev)
-            remove_controller(prev->get_ctrl_key());
+    if (is_playing) {
+        is_playing = player->toggle();
+        kbi_button_control_play_or_stop.set_label("Play");
+        remove_controller(controller->get_ctrl_key());
+        controller->stop_everything();
     }
+    controller = controllers.at(name)(player);
 }
 
 KbiWindow::~KbiWindow()

@@ -207,10 +207,8 @@ bool ScoreCtrl::tick()
         wait_ticks--;
         return true;
     }
-    if (current_line != score.cend()) {
+    for (; current_line != score.cend() && wait_ticks == 0; ++current_line)
         execute(*current_line);
-        current_line++;
-    }
     return true;
 }
 

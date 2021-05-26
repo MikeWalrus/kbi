@@ -98,6 +98,7 @@ void KbiWindow::on_button_control_play_or_stop_clicked()
         add_controller(controller->get_ctrl_key());
     }
     else {
+        controller->stop_everything();
         kbi_button_control_play_or_stop.set_label("Play");
         remove_controller(controller->get_ctrl_key());
     }

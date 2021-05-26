@@ -9,6 +9,8 @@
 #include <gtkmm/filechooserdialog.h>
 #include "Player.h"
 #include <functional>
+#include <vector>
+#include <stack>
 
 class KbiWindow;
 
@@ -69,6 +71,10 @@ public:
 
     void stop_everything() override;
 
+    virtual ~ScoreCtrl() {
+        ScoreCtrl::stop_everything();
+    }
+
 private:
     typedef void (ScoreCtrl::* Operation)(const string&);
 
@@ -78,25 +84,38 @@ private:
         int line;
     };
 
+    typedef vector<ScoreCtrl::Instruction>::const_iterator ScoreIterator;
+
+    struct Task {
+        int wait_ticks;
+        function<void()> task;
+    };
+
+    struct Loop {
+        int times_left{};
+        ScoreIterator loop_beg;
+        bool infinite = false;
+    };
+
     KbiWindow* main_window;
+    sigc::connection timeout;
     std::vector<Instruction> score;
-    vector<Instruction>::const_iterator current_line;
+    ScoreIterator current_line;
     std::map<std::string, Operation> func_table{
             {"tempo",   &ScoreCtrl::set_tempo},
             {"noteon",  &ScoreCtrl::note_on},
             {"noteoff", &ScoreCtrl::note_off},
             {"wait",    &ScoreCtrl::wait},
-            {"note",    &ScoreCtrl::note_auto}
+            {"note",    &ScoreCtrl::note_auto},
+            {"loop",    &ScoreCtrl::begin_loop},
+            {"endloop", &ScoreCtrl::end_loop}
     };
-    int tempo{};
+    int tempo = 0;
     bool has_started = false;
     int wait_ticks = 0;
-    int tick_interval = 100;
-    struct Task {
-        int wait_ticks;
-        function<void()> task;
-    };
+    int tick_interval = 60;
     std::vector<Task> tasks;
+    std::stack<Loop> loops;
 
     bool on_key_pressed(guint keyVal, guint, Gdk::ModifierType state) override
     {
@@ -120,6 +139,10 @@ private:
 
     void note_auto(const string& args);
 
+    void begin_loop(const string& args);
+
+    void end_loop(const string& args);
+
     bool tick();
 
     void execute(const Instruction& instruction);
@@ -137,6 +160,9 @@ private:
     void execute_delayed_tasks();
 
     void wait(double beats);
+
+    static void parse_line(const string& line, string& args, string& op);
+
 };
 
 #endif //KBI_CTRL_H

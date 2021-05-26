@@ -95,7 +95,6 @@ ScoreCtrl::ScoreCtrl(Player* p_player, KbiWindow* window)
             sigc::mem_fun(*this, &ScoreCtrl::on_file_dialog_response), dialog));
 
     dialog->show();
-    Glib::signal_timeout().connect(sigc::mem_fun(*this, &ScoreCtrl::tick), tick_interval);
 }
 
 void ScoreCtrl::on_file_dialog_response(int response_id, Gtk::FileChooserDialog* dialog)
@@ -113,12 +112,10 @@ void ScoreCtrl::on_file_dialog_response(int response_id, Gtk::FileChooserDialog*
         break;
     }
     case Gtk::ResponseType::CANCEL: {
-        std::cout << "Cancel clicked." << std::endl;
         main_window->reset_control();
         break;
     }
     default: {
-        std::cout << "Unexpected button clicked." << std::endl;
         break;
     }
     }
@@ -134,13 +131,9 @@ void ScoreCtrl::parse_score(const string& file_name)
         ++line_num;
         if (line.empty())
             continue;
-        auto after_op = line.find(' ');
-        string args;
-        if (after_op == string::npos)
-            args = "";
-        else
-            args = string(line.cbegin() + static_cast<long>(after_op), line.cend());
-        auto op = line.substr(0, after_op);
+        line.erase(line.begin(), find_if(line.cbegin(), line.cend(), [](auto c) { return isalpha(c); }));
+        string op, args;
+        parse_line(line, args, op);
         try {
             Operation operation = func_table.at(op);
             Instruction i{operation, args, line_num};
@@ -151,6 +144,18 @@ void ScoreCtrl::parse_score(const string& file_name)
         }
     }
     current_line = score.cbegin();
+}
+
+void
+ScoreCtrl::parse_line(const string& line, string& args,
+        string& op)
+{
+    auto after_op = line.find(' ');
+    op = line.substr(0, after_op);
+    if (after_op == string::npos)
+        args = "";
+    else
+        args = string(line.cbegin() + static_cast<long>(after_op), line.cend());
 }
 
 void ScoreCtrl::set_tempo(const string& arg)
@@ -189,6 +194,8 @@ void ScoreCtrl::run_score()
 {
     has_started = true;
     current_line = score.cbegin();
+    if (!timeout.connected())
+        timeout = Glib::signal_timeout().connect(sigc::mem_fun(*this, &ScoreCtrl::tick), tick_interval);
 }
 
 bool ScoreCtrl::tick()
@@ -272,14 +279,42 @@ void ScoreCtrl::note_auto(const string& args)
         wait(beats_before_off);
     auto player = get_player();
     player->note_on(note);
-    cout << get_ticks(beats_before_off) << endl;
-    cout << beats_before_off << endl;
     Task new_task{get_ticks(beats_before_off), [player, note]() { player->note_off(note); }};
     tasks.push_back(new_task);
+}
+
+void ScoreCtrl::begin_loop(const string& args)
+{
+    stringstream ss(args);
+    int times = 1;
+    bool infinite = false;
+    if (!(ss >> times))
+        infinite = true;
+    loops.push({times, current_line, infinite});
+}
+
+void ScoreCtrl::end_loop(const string& args)
+{
+    auto& current_loop = loops.top();
+    if (!current_loop.infinite)
+        --current_loop.times_left;
+    auto jump_to = current_loop.loop_beg;
+    if (!current_loop.times_left) {
+        loops.pop();
+        return;
+    }
+    if (jump_to == score.cend())
+        throw std::runtime_error("cannot loop back");
+    current_line = jump_to;
 }
 
 void ScoreCtrl::stop_everything()
 {
     has_started = false;
     get_player()->clear_voices();
+    timeout.disconnect();
 }
+
+
+
+

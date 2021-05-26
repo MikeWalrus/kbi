@@ -109,7 +109,6 @@ bool NotesDrawingArea::refresh()
 
 void NotesDrawingArea::break_line(string& markup_text, int count)
 {
-    cout << count << endl;
     for (int i = 0; i < count; ++i) {
         auto break_pos = markup_text.find("> <", markup_text.size()/(count + 1)*(i + 1));
         if (break_pos != string::npos) {

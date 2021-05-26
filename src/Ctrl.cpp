@@ -124,6 +124,7 @@ void ScoreCtrl::on_file_dialog_response(int response_id, Gtk::FileChooserDialog*
 
 void ScoreCtrl::parse_score(const string& file_name)
 {
+    score.clear();
     ifstream file(file_name);
     string line;
     int line_num = 0;
@@ -277,7 +278,10 @@ void ScoreCtrl::note_auto(const string& args)
         wait(beats_before_off);
     auto player = get_player();
     player->note_on(note);
-    Task new_task{get_ticks(beats_before_off), [player, note]() { player->note_off(note); }};
+    int ticks_before_off = get_ticks(beats_before_off);
+    if (!ticks_before_off)
+        ticks_before_off = 1;
+    Task new_task{ticks_before_off, [player, note]() { player->note_off(note); }};
     tasks.push_back(new_task);
 }
 

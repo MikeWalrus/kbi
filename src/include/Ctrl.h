@@ -71,7 +71,8 @@ public:
 
     void stop_everything() override;
 
-    virtual ~ScoreCtrl() {
+    virtual ~ScoreCtrl()
+    {
         ScoreCtrl::stop_everything();
     }
 
@@ -119,8 +120,15 @@ private:
 
     bool on_key_pressed(guint keyVal, guint, Gdk::ModifierType state) override
     {
-        if (keyVal == GDK_KEY_s) {
+        switch (keyVal) {
+        case GDK_KEY_s:
             run_score();
+            break;
+        case GDK_KEY_o:
+            ask_for_file(main_window);
+            break;
+        default:
+            return true;
         }
         return true;
     };
@@ -163,6 +171,7 @@ private:
 
     static void parse_line(const string& line, string& args, string& op);
 
+    void ask_for_file(KbiWindow* window);
 };
 
 #endif //KBI_CTRL_H

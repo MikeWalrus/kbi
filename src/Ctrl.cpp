@@ -85,6 +85,11 @@ bool LinearCtrl::on_key_pressed(guint keyVal, guint, Gdk::ModifierType state)
 ScoreCtrl::ScoreCtrl(Player* p_player, KbiWindow* window)
         :Ctrl(p_player), main_window(window)
 {
+    ask_for_file(main_window);
+}
+
+void ScoreCtrl::ask_for_file(KbiWindow* window)
+{
     auto dialog = new Gtk::FileChooserDialog("Please choose a file",
             Gtk::FileChooser::Action::OPEN);
     dialog->set_transient_for(*window);
@@ -124,6 +129,7 @@ void ScoreCtrl::on_file_dialog_response(int response_id, Gtk::FileChooserDialog*
 
 void ScoreCtrl::parse_score(const string& file_name)
 {
+    stop_everything();
     score.clear();
     ifstream file(file_name);
     string line;

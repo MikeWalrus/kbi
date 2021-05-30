@@ -135,9 +135,13 @@ void ScoreCtrl::parse_score(const string& file_name)
     int line_num = 0;
     while (getline(file, line)) {
         ++line_num;
-        if (line.empty())
+        auto comment_begin = line.find("//"); // get rid of comments
+        if (comment_begin != string::npos)
+            line.erase(comment_begin, line.length());
+        if (line.empty()) // skip empty lines
             continue;
-        line.erase(line.begin(), find_if(line.cbegin(), line.cend(), [](auto c) { return isalpha(c); }));
+        line.erase(line.begin(),
+                find_if(line.cbegin(), line.cend(), [](auto c) { return isalpha(c); })); // skip leading spaces
         string op, args;
         parse_line(line, args, op);
         try {
@@ -247,7 +251,7 @@ void ScoreCtrl::report_error(const string& msg)
     m->set_title("Error in" + filename);
     m->set_expand();
     m->set_size_request(500, -1);
-    m->signal_response().connect([this](int id){
+    m->signal_response().connect([this](int id) {
         if (id == Gtk::ResponseType::OK) {
             {
                 has_started = false;

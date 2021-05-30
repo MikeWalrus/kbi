@@ -7,6 +7,7 @@
 
 #include <gtkmm/eventcontrollerkey.h>
 #include <gtkmm/filechooserdialog.h>
+#include <gtkmm/messagedialog.h>
 #include "Player.h"
 #include <functional>
 #include <vector>
@@ -172,6 +173,12 @@ private:
     static void parse_line(const string& line, string& args, string& op);
 
     void ask_for_file(KbiWindow* window);
+
+    unique_ptr<Gtk::MessageDialog> m;
+
+    void report_error(const string& msg);
+
+    string filename;
 };
 
 #endif //KBI_CTRL_H

@@ -106,13 +106,12 @@ void ScoreCtrl::on_file_dialog_response(int response_id, Gtk::FileChooserDialog*
 {
     switch (response_id) {
     case Gtk::ResponseType::OK: {
-        auto filename = dialog->get_file()->get_path();
+        filename = dialog->get_file()->get_path();
         try {
             parse_score(filename);
         }
         catch (runtime_error& error) {
-            cout << error.what() << endl;
-            main_window->reset_control();
+            report_error(error.what());
         }
         break;
     }
@@ -237,10 +236,28 @@ void ScoreCtrl::execute(const ScoreCtrl::Instruction& instruction)
         (this->*instruction.op)(instruction.args);
     }
     catch (std::runtime_error& error) {
-        cout << get_error_msg(current_line->line, error.what()) << endl;
-        has_started = false;
-        main_window->reset_control();
+        string msg = get_error_msg(current_line->line, error.what());
+        report_error(msg);
     }
+}
+
+void ScoreCtrl::report_error(const string& msg)
+{
+    m = make_unique<Gtk::MessageDialog>(msg);
+    m->set_title("Error in" + filename);
+    m->set_expand();
+    m->set_size_request(500, -1);
+    m->signal_response().connect([this](int id){
+        if (id == Gtk::ResponseType::OK) {
+            {
+                has_started = false;
+                m->hide();
+                main_window->reset_control();
+            }
+        }
+    });
+    m->set_transient_for(*main_window);
+    m->show();
 }
 
 void ScoreCtrl::wait(const string& args)

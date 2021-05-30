@@ -116,7 +116,8 @@ void ScoreCtrl::on_file_dialog_response(int response_id, Gtk::FileChooserDialog*
         break;
     }
     case Gtk::ResponseType::CANCEL: {
-        main_window->reset_control();
+        if (filename.empty())
+            main_window->reset_control();
         break;
     }
     default: {
@@ -203,7 +204,6 @@ Player::Note ScoreCtrl::getNote(const string& args)
 void ScoreCtrl::run_score()
 {
     has_started = true;
-    current_line = score.cbegin();
     if (!timeout.connected())
         timeout = Glib::signal_timeout().connect(sigc::mem_fun(*this, &ScoreCtrl::tick), tick_interval);
 }
@@ -248,9 +248,8 @@ void ScoreCtrl::execute(const ScoreCtrl::Instruction& instruction)
 void ScoreCtrl::report_error(const string& msg)
 {
     m = make_unique<Gtk::MessageDialog>(msg);
-    m->set_title("Error in" + filename);
-    m->set_expand();
-    m->set_size_request(500, -1);
+    m->set_title("Syntax error in " + filename);
+    m->set_size_request(700, -1);
     m->signal_response().connect([this](int id) {
         if (id == Gtk::ResponseType::OK) {
             {
@@ -342,6 +341,29 @@ void ScoreCtrl::stop_everything()
     has_started = false;
     get_player()->clear_voices();
     timeout.disconnect();
+}
+
+bool ScoreCtrl::on_key_pressed(guint keyVal, guint, Gdk::ModifierType state)
+{
+    switch (keyVal) {
+    case GDK_KEY_s:
+        run_score();
+        break;
+    case GDK_KEY_o:
+        ask_for_file(main_window);
+        break;
+    case GDK_KEY_p:
+        pause_score();
+    default:
+        return true;
+    }
+    return true;
+}
+
+void ScoreCtrl::pause_score()
+{
+    has_started = false;
+    stop_everything();
 }
 
 

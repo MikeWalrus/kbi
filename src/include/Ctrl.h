@@ -118,21 +118,10 @@ private:
     int tick_interval = 60;
     std::vector<Task> tasks;
     std::stack<Loop> loops;
+    string filename;
+    unique_ptr<Gtk::MessageDialog> m;
 
-    bool on_key_pressed(guint keyVal, guint, Gdk::ModifierType state) override
-    {
-        switch (keyVal) {
-        case GDK_KEY_s:
-            run_score();
-            break;
-        case GDK_KEY_o:
-            ask_for_file(main_window);
-            break;
-        default:
-            return true;
-        }
-        return true;
-    };
+    bool on_key_pressed(guint keyVal, guint, Gdk::ModifierType state) override;;
 
     void on_key_released(guint keyVal, guint, Gdk::ModifierType state) override { };
 
@@ -174,11 +163,9 @@ private:
 
     void ask_for_file(KbiWindow* window);
 
-    unique_ptr<Gtk::MessageDialog> m;
-
     void report_error(const string& msg);
 
-    string filename;
+    void pause_score();
 };
 
 #endif //KBI_CTRL_H

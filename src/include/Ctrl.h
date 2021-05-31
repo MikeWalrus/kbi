@@ -166,6 +166,8 @@ private:
     void report_error(const string& msg);
 
     void pause_score();
+
+    void restart_score();
 };
 
 #endif //KBI_CTRL_H

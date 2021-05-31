@@ -339,6 +339,7 @@ void ScoreCtrl::end_loop(const string& args)
 void ScoreCtrl::stop_everything()
 {
     has_started = false;
+    loops = {};
     get_player()->clear_voices();
     timeout.disconnect();
 }
@@ -354,6 +355,9 @@ bool ScoreCtrl::on_key_pressed(guint keyVal, guint, Gdk::ModifierType state)
         break;
     case GDK_KEY_p:
         pause_score();
+        break;
+    case GDK_KEY_r:
+        restart_score();
     default:
         return true;
     }
@@ -364,6 +368,13 @@ void ScoreCtrl::pause_score()
 {
     has_started = false;
     stop_everything();
+}
+
+void ScoreCtrl::restart_score()
+{
+    current_line = score.cbegin();
+    stop_everything();
+    run_score();
 }
 
 

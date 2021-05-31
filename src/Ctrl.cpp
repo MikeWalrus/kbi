@@ -339,7 +339,6 @@ void ScoreCtrl::end_loop(const string& args)
 void ScoreCtrl::stop_everything()
 {
     has_started = false;
-    loops = {};
     get_player()->clear_voices();
     timeout.disconnect();
 }
@@ -373,6 +372,7 @@ void ScoreCtrl::pause_score()
 void ScoreCtrl::restart_score()
 {
     current_line = score.cbegin();
+    loops = {};
     stop_everything();
     run_score();
 }

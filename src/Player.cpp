@@ -45,6 +45,7 @@ void Player::stop()
 
 void Player::clear_voices()
 {
+    scoped_lock<mutex> lock(voices_guard);
     for_each(voices.begin(), voices.end(), [](decltype(*(voices.begin()))& pair) { delete pair.second; });
     voices.clear();
 }
@@ -293,8 +294,8 @@ std::string Player::Note::to_string() const
 
 void Player::set_instrument(const string& name)
 {
-    scoped_lock<mutex> lock(voices_guard);
     clear_voices();
+    scoped_lock<mutex> lock(voices_guard);
     voice_prototype = get_prototype(name);
     current_instrument_name = name;
 }

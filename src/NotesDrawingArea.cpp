@@ -26,8 +26,6 @@ void NotesDrawingArea::on_draw(const Cairo::RefPtr<Cairo::Context>& cr, int widt
     // Draw a black rectangle
     draw_rectangle(cr, width, height);
 
-    // and some white text
-    cr->set_source_rgb(1.0, 1.0, 1.0);
     draw_text(cr, width, height);
 
     Cairo::Matrix matrix(1.0, 0.0, 0.0, -1.0, 0.0, height);
@@ -111,7 +109,6 @@ bool NotesDrawingArea::refresh()
 
 void NotesDrawingArea::break_line(string& markup_text, int count)
 {
-    cout << count << endl;
     for (int i = 0; i < count; ++i) {
         auto break_pos = markup_text.find("> <", markup_text.size()/(count + 1)*(i + 1));
         if (break_pos != string::npos) {

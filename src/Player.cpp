@@ -22,7 +22,6 @@ Player::~Player()
     save_key_file();
 }
 
-// Return whether is playing.
 bool Player::toggle()
 {
     if (Pa_IsStreamActive(*stream)) {
@@ -78,15 +77,6 @@ void Player::play()
     output[0] = mixed_out;//left speaker
     output[1] = output[0];
     prev_out = mixed_out;
-}
-
-// calculate the frequency of a note
-// Note that this doesn't check whether the note is valid.
-double Player::noteToFrequency(const Note& note)
-{
-    int scale[7] = {0, 2, 3, 5, 7, 8, 10};
-    int relative_to_A_4 = scale[note.letter - 'A'] + 12*(note.number - 4);
-    return 440.0*pow(2.0, ((relative_to_A_4 + note.sharp)/12.0));
 }
 
 void Player::note_on(const Note& note)
@@ -156,7 +146,7 @@ void Player::load_builtin_instruments()
 
 double SamplerVoice::output_something()
 {
-    auto freq = get_freq()/Player::noteToFrequency(base_note)/static_cast<double>(loop_length)*sample.mySampleRate;
+    auto freq = get_freq()/base_note.get_frequency()/static_cast<double>(loop_length)*sample.mySampleRate;
     auto sample_output = sample.play(freq, static_cast<double>(loop_begin), static_cast<double>(loop_end));
     // In order to eliminate the 'audio pops', we should wait until its output reaches 0
     // before going back to the beginning.

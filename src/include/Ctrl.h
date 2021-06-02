@@ -17,6 +17,10 @@ class KbiWindow;
 
 class Ctrl {
 public:
+    /**
+     * Get the EventControllerKey to add to the main window.
+     * @return a smart pointer to its EventControllerKey
+     */
     [[nodiscard]] const Glib::RefPtr<Gtk::EventControllerKey>& get_ctrl_key() const
     {
         return ctrl_key;
@@ -29,6 +33,9 @@ public:
         return player;
     }
 
+    /**
+     * Derived class should override this method to reset its internal states.
+     */
     virtual void stop_everything() { };
 
 private:
@@ -47,6 +54,11 @@ public:
     explicit LinearCtrl(Player* p_player)
             :Ctrl(p_player) { }
 
+    /**
+     * All non-abstract derived classes of Ctrl should have a static factory method.
+     * @param p_player pass the player to the Ctrl it creates.
+     * @return a smart pointer to the newly created object.
+     */
     static shared_ptr<Ctrl> create(Player* p_player)
     {
         return make_shared<LinearCtrl>(p_player);

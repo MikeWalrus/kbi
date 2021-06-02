@@ -20,8 +20,14 @@ class Voice;
 
 class SamplerVoice;
 
+/**
+ * A class that allocates and manages Voices and provide the audio output.
+ */
 class Player {
 public:
+    /**
+     * A struct that represents musical notes.
+     */
     struct Note {
         int letter{};
         int number{};
@@ -37,11 +43,23 @@ public:
             return !(*this == note);
         }
 
+        /**
+         * Get the frequency this note.
+         * Note that this doesn't check whether the note has valid fields.
+         * @return frequency
+         */
+        [[nodiscard]] double get_frequency() const
+        {
+            int scale[7] = {0, 2, 3, 5, 7, 8, 10};
+            int relative_to_A_4 = scale[letter - 'A'] + 12*(number - 4);
+            return 440.0*pow(2.0, ((relative_to_A_4 + sharp)/12.0));
+        }
+
         friend std::istream& operator>>(std::istream& is, Note& note);
 
 #ifndef __clang__
 
-        // This is C++20 magic! But won't compile with clang
+        // This is C++20 magic! But won't compile with clang 10
         auto operator<=>(const Note&) const = default;
 
 #else
@@ -64,6 +82,11 @@ public:
         [[nodiscard]] std::string to_string() const;
     };
 
+    /**
+     * Literals to use as keys in Glib::KeyFile.
+     *
+     * Acts like a enum for strings.
+     */
     struct Keys {
         constexpr static char uri[]{"sample_uri"};
         constexpr static char base_note[]{"base_note"};
@@ -80,6 +103,10 @@ public:
 
     Player& operator=(const Player&) = delete;
 
+    /**
+     * toggle the playing status of Player (on to off / off to on)
+     * @return whether is playing.
+     */
     bool toggle();
 
     void stop();
@@ -88,18 +115,33 @@ public:
 
     double* output;
 
+    /**
+     * Start playing a note
+     */
     void note_on(const Note& note);
 
+    /**
+     * Stop a specific note. Nothing will happen if the note isn't currently on.
+     */
     void note_off(const Note& note);
 
+    /**
+     * Clear all the voices so that all current note are discarded.
+     */
     void clear_voices();
 
+    /**
+     * Specify 'how polyphonic' the Player should be.
+     * @param voices_number maximum number of voices. (0 if no restriction)
+     */
     void set_voices_limit(int voices_number);
-
-    static double noteToFrequency(const Note& note);
 
     [[nodiscard]] vector<pair<Player::Note, bool>> get_current_notes() const;
 
+    /**
+     * Change current instrument.
+     * @param name name of a instrument
+     */
     void set_instrument(const string& name);
 
     const string& get_current_instrument();
@@ -135,6 +177,9 @@ private:
     Note load_base_note(const string& name) const;
 };
 
+/**
+ * The base class of all Voices.
+ */
 class Voice {
 private:
     maxiEnv env;
@@ -177,7 +222,7 @@ public:
     {
         if (!env.trigger) {
             env.trigger = 1;
-            freq = Player::noteToFrequency(note);
+            freq = note.get_frequency();
             turn_on_something();
         }
     }

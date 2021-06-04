@@ -61,7 +61,7 @@ public:
             return os;
         }
 
-        std::string to_string() const;
+        [[nodiscard]] std::string to_string() const;
     };
 
     struct Keys {
@@ -215,7 +215,6 @@ public:
 
 class SynthVoice : public Voice {
 private:
-    maxiOsc osc;
     vector<maxiOsc> oscillators;
     struct OscSpec {
         double volume;

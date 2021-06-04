@@ -131,7 +131,7 @@ private:
     std::vector<Task> tasks;
     std::stack<Loop> loops;
     string filename;
-    unique_ptr<Gtk::MessageDialog> m;
+    unique_ptr<Gtk::MessageDialog> message_dialog;
 
     bool on_key_pressed(guint keyVal, guint, Gdk::ModifierType state) override;;
 

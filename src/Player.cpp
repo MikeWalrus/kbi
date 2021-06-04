@@ -71,10 +71,10 @@ void Player::play()
         mixed_out += voice_output;
         it++;
     }
-    if (abs(prev_out - mixed_out) > 0.1) {
+    if (abs(prev_out - mixed_out) > 0.5) {
         cerr << "Pop!\n";
     }
-    output[0] = mixed_out;//left speaker
+    output[0] = mixed_out; //left speaker
     output[1] = output[0];
     prev_out = mixed_out;
 }

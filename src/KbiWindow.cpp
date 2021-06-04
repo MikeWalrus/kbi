@@ -142,7 +142,7 @@ void MyComboBox::on_change()
         return;
     }
     string s = row[columns.names];
-    functor(s);
+    change_something(s);
 }
 
 void MyComboBox::load_tree_model(const vector<Glib::ustring>& names)

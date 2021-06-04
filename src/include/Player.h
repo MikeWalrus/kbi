@@ -181,15 +181,7 @@ private:
  * The base class of all Voices.
  */
 class Voice {
-private:
-    maxiEnv env;
-    double volume{};
-    double freq{};
-
-    virtual Voice* new_copy() = 0;
-
 public:
-
     Voice* clone()
     {
         return new_copy();
@@ -246,17 +238,16 @@ public:
     {
         return env.trigger;
     }
+
+private:
+    maxiEnv env;
+    double volume{};
+    double freq{};
+
+    virtual Voice* new_copy() = 0;
 };
 
 class SynthVoice : public Voice {
-private:
-    maxiOsc osc;
-
-    Voice* new_copy() override
-    {
-        return new SynthVoice(*this);
-    }
-
 public:
     SynthVoice()
             :Voice({10, 50, 100, 1000}) { }
@@ -264,6 +255,14 @@ public:
     double output_something() override
     {
         return 0.1*osc.sinewave(get_freq());
+    }
+
+private:
+    maxiOsc osc;
+
+    Voice* new_copy() override
+    {
+        return new SynthVoice(*this);
     }
 };
 
@@ -291,14 +290,17 @@ public:
     void set_loop(const array<long, 2>& loop);
 
 private:
+    maxiSample sample;
+    bool shouldTurnOn = false;
+    Player::Note base_note;
+    long loop_begin{};
+    long loop_end{};
+    long loop_length{};
+
     Voice* new_copy() override
     {
         return new SamplerVoice(*this);
     }
-
-    maxiSample sample;
-    bool shouldTurnOn = false;
-    Player::Note base_note;
 
     Sample_iterator find_zero_cross_near(vector<double>::const_iterator position);
 
@@ -309,10 +311,6 @@ private:
     double how_close(Sample_iterator begin, Sample_iterator end);
 
     Sample_iterator find_loop_at(Sample_iterator& start, int count);
-
-    long loop_begin{};
-    long loop_end{};
-    long loop_length{};
 };
 
 template<class T>

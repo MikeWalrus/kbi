@@ -13,10 +13,10 @@
 #include <gtkmm/box.h>
 #include <gtkmm/treemodel.h>
 #include <gtkmm/combobox.h>
+#include <gtkmm/liststore.h>
 #include <functional>
 #include <map>
 #include <utility>
-#include <gtkmm/liststore.h>
 #include "portaudio.h"
 #include "Ctrl.h"
 #include "Player.h"
@@ -39,10 +39,10 @@ struct MyComboBox {
     ModelColumns columns;
     Gtk::ComboBox combo_box;
     Glib::RefPtr<Gtk::ListStore> tree;
-    std::function<void(const std::string&)> functor;
+    std::function<void(const std::string&)> change_something;
 
-    explicit MyComboBox(std::function<void(const std::string&)> changeSomething, const vector<Glib::ustring>& names)
-            :tree(Gtk::ListStore::create(columns)), functor(std::move(changeSomething))
+    explicit MyComboBox(std::function<void(const std::string&)> change_something, const vector<Glib::ustring>& names)
+            :tree(Gtk::ListStore::create(columns)), change_something(std::move(change_something))
     {
         combo_box.set_model(tree);
         combo_box.set_size_request(300, 50);
@@ -90,9 +90,9 @@ private:
     NotesDrawingArea kbi_draw;
     typedef function<shared_ptr<Ctrl>(Player*)> CtrlFactoryMethod;
     const std::map<Glib::ustring, CtrlFactoryMethod> controllers = {{"Linear", LinearCtrl::create},
-                                                                    {"Score File", [this](auto&& PH1) {
+                                                                    {"Score File", [this](auto&& main_window) {
                                                                         return ScoreCtrl::create(
-                                                                                std::forward<decltype(PH1)>(PH1), this);
+                                                                                std::forward<decltype(main_window)>(main_window), this);
                                                                     }}};
     shared_ptr<Ctrl> controller;
 

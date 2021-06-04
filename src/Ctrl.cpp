@@ -247,20 +247,20 @@ void ScoreCtrl::execute(const ScoreCtrl::Instruction& instruction)
 
 void ScoreCtrl::report_error(const string& msg)
 {
-    m = make_unique<Gtk::MessageDialog>(msg);
-    m->set_title("Syntax error in " + filename);
-    m->set_size_request(700, -1);
-    m->signal_response().connect([this](int id) {
+    message_dialog = make_unique<Gtk::MessageDialog>(msg);
+    message_dialog->set_title("Syntax error in " + filename);
+    message_dialog->set_size_request(700, -1);
+    message_dialog->signal_response().connect([this](int id) {
         if (id == Gtk::ResponseType::OK) {
             {
                 has_started = false;
-                m->hide();
+                message_dialog->hide();
                 main_window->reset_control();
             }
         }
     });
-    m->set_transient_for(*main_window);
-    m->show();
+    message_dialog->set_transient_for(*main_window);
+    message_dialog->show();
 }
 
 void ScoreCtrl::wait(const string& args)

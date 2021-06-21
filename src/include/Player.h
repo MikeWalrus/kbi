@@ -186,6 +186,13 @@ private:
  * The base class of all Voices.
  */
 class Voice {
+private:
+    maxiEnv env;
+    double volume{};
+    double freq{};
+
+    virtual Voice* new_copy() = 0;
+
 public:
     Voice* clone()
     {
@@ -248,7 +255,9 @@ public:
     {
         return env.trigger;
     }
+};
 
+class SynthVoice : public Voice {
 private:
     vector<maxiOsc> oscillators;
     struct OscSpec {
@@ -257,10 +266,11 @@ private:
     };
     vector<OscSpec> osc_specs;
 
-    virtual Voice* new_copy() = 0;
-};
+    Voice* new_copy() override
+    {
+        return new SynthVoice(*this);
+    }
 
-class SynthVoice : public Voice {
 public:
     SynthVoice()
             :Voice({10, 50, 100, 1000}) { }
@@ -294,14 +304,6 @@ public:
         for_each(osc_specs.begin(), osc_specs.end(), [total_vol](auto& spec) {
             spec.volume /= total_vol;
         });
-    }
-
-private:
-    maxiOsc osc;
-
-    Voice* new_copy() override
-    {
-        return new SynthVoice(*this);
     }
 };
 

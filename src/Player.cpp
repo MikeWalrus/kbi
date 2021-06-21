@@ -328,17 +328,15 @@ void Player::save_key_file() { key_file->save_to_file(Glib::get_user_data_dir() 
 unique_ptr<Voice> Player::get_prototype(const string& name)
 {
     using namespace Glib;
-    if (key_file->has_key(name, Keys::uri)) {
-        auto uri = key_file->get_string(name, Keys::uri);
-        Player::Note base_note = load_base_note(name);
-        Voice::Adsr adsr = load_adsr(name);
-        auto* sampler_voice = new SamplerVoice(adsr, base_note);
-        sampler_voice->load(uri);
-        load_loop(name, sampler_voice);
-
-        return unique_ptr<Voice>(sampler_voice);
+    unique_ptr<Voice> ret;
+    if (key_file->has_key(name, Keys::uri))
+        ret = get_sampler_instrument(name);
+    else {
+        ret = get_synth_instrument(name);
     }
-    return unique_ptr<Voice>(new SynthVoice);
+    Voice::Adsr adsr = load_adsr(name);
+    ret->set_adsr(adsr);
+    return ret;
 }
 
 Player::Note Player::load_base_note(const string& name) const
@@ -378,5 +376,31 @@ void Player::load_loop(const string& name, SamplerVoice* sampler_voice)
         loop[1] = key_file->get_int64(name, Keys::end);
     }
     sampler_voice->set_loop(loop);
+}
+
+unique_ptr<Voice> Player::get_sampler_instrument(const string& name)
+{
+    auto uri = key_file->get_string(name, Keys::uri);
+    Player::Note base_note = load_base_note(name);
+    auto* sampler_voice = new SamplerVoice({}, base_note);
+    sampler_voice->load(uri);
+    load_loop(name, sampler_voice);
+    return unique_ptr<Voice>(sampler_voice);
+}
+
+unique_ptr<Voice> Player::get_synth_instrument(const string& name)
+{
+    auto ret = make_unique<SynthVoice>();
+    if(key_file->has_key(name, Keys::synth_desc))
+    {
+        auto desc = key_file->get_double_list(name, Keys::synth_desc);
+        if (desc.size() % 2 != 0)
+            throw std::runtime_error("invalid description");
+        for_each(desc.begin(), desc.end(), [](auto i){cout << i << " ";});
+        cout << endl;
+        auto synth_voice = new SynthVoice(desc);
+        ret.reset(synth_voice);
+    }
+    return ret;
 }
 

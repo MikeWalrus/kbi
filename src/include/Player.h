@@ -93,6 +93,7 @@ public:
         constexpr static char beg[]{"loop_beg"};
         constexpr static char end[]{"loop_end"};
         constexpr static const char* adsr[]{"attack", "decay", "sustain", "release"};
+        constexpr static char synth_desc[]{"synth_description"};
     };
 
     explicit Player(void** stream, double* output);
@@ -175,6 +176,10 @@ private:
     array<int, 4> load_adsr(const string& name) const;
 
     Note load_base_note(const string& name) const;
+
+    unique_ptr<Voice> get_sampler_instrument(const string& name);
+
+    unique_ptr<Voice> get_synth_instrument(const string& name);
 };
 
 /**
@@ -189,13 +194,18 @@ public:
 
     typedef array<int, 4> Adsr;
 
-    explicit Voice(Adsr adsr)
+    void set_adsr(Adsr adsr)
     {
-        env.trigger = 0;
         env.setAttack(adsr[0]);
         env.setDecay(adsr[1]);
         env.setSustain(adsr[2]);
         env.setRelease(adsr[3]);
+    }
+
+    explicit Voice(Adsr adsr)
+    {
+        env.trigger = 0;
+        set_adsr(adsr);
     }
 
     virtual ~Voice() = default;
@@ -240,9 +250,12 @@ public:
     }
 
 private:
-    maxiEnv env;
-    double volume{};
-    double freq{};
+    vector<maxiOsc> oscillators;
+    struct OscSpec {
+        double volume;
+        double rel_freq;
+    };
+    vector<OscSpec> osc_specs;
 
     virtual Voice* new_copy() = 0;
 };
@@ -254,7 +267,33 @@ public:
 
     double output_something() override
     {
-        return 0.1*osc.sinewave(get_freq());
+        auto fundamental = get_freq();
+        double output = 0;
+        for (int i = 0; i < oscillators.size(); ++i) {
+            auto& spec = osc_specs[i];
+            output += 0.3 * spec.volume*oscillators[i].sinewave(spec.rel_freq * fundamental);
+        }
+        return output;
+    }
+
+    explicit SynthVoice(const vector<double>& desc)
+            :Voice({})
+    {
+        oscillators = vector<maxiOsc>{desc.size()/2};
+        for (auto it = desc.cbegin(); it != desc.cend(); ++it) {
+            osc_specs.push_back({*it, *++it});
+            cout << "one" << endl;
+        }
+        normalise_volumes();
+    }
+
+    void normalise_volumes()
+    {
+        double total_vol = accumulate(osc_specs.begin(), osc_specs.end(), 0.,
+                [](double sum, auto& spec) { return sum + spec.volume; });
+        for_each(osc_specs.begin(), osc_specs.end(), [total_vol](auto& spec) {
+            spec.volume /= total_vol;
+        });
     }
 
 private:

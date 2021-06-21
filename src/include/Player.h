@@ -20,8 +20,14 @@ class Voice;
 
 class SamplerVoice;
 
+/**
+ * A class that allocates and manages Voices and provide the audio output.
+ */
 class Player {
 public:
+    /**
+     * A struct that represents musical notes.
+     */
     struct Note {
         int letter{};
         int number{};
@@ -37,11 +43,23 @@ public:
             return !(*this == note);
         }
 
+        /**
+         * Get the frequency this note.
+         * Note that this doesn't check whether the note has valid fields.
+         * @return frequency
+         */
+        [[nodiscard]] double get_frequency() const
+        {
+            int scale[7] = {0, 2, 3, 5, 7, 8, 10};
+            int relative_to_A_4 = scale[letter - 'A'] + 12*(number - 4);
+            return 440.0*pow(2.0, ((relative_to_A_4 + sharp)/12.0));
+        }
+
         friend std::istream& operator>>(std::istream& is, Note& note);
 
 #ifndef __clang__
 
-        // This is C++20 magic! But won't compile with clang
+        // This is C++20 magic! But won't compile with clang 10
         auto operator<=>(const Note&) const = default;
 
 #else
@@ -64,6 +82,11 @@ public:
         [[nodiscard]] std::string to_string() const;
     };
 
+    /**
+     * Literals to use as keys in Glib::KeyFile.
+     *
+     * Acts like a enum for strings.
+     */
     struct Keys {
         constexpr static char uri[]{"sample_uri"};
         constexpr static char base_note[]{"base_note"};
@@ -81,6 +104,10 @@ public:
 
     Player& operator=(const Player&) = delete;
 
+    /**
+     * toggle the playing status of Player (on to off / off to on)
+     * @return whether is playing.
+     */
     bool toggle();
 
     void stop();
@@ -89,16 +116,33 @@ public:
 
     double* output;
 
+    /**
+     * Start playing a note
+     */
     void note_on(const Note& note);
 
+    /**
+     * Stop a specific note. Nothing will happen if the note isn't currently on.
+     */
     void note_off(const Note& note);
 
-    void set_voices_limit(int voices_number);
+    /**
+     * Clear all the voices so that all current note are discarded.
+     */
+    void clear_voices();
 
-    static double noteToFrequency(const Note& note);
+    /**
+     * Specify 'how polyphonic' the Player should be.
+     * @param voices_number maximum number of voices. (0 if no restriction)
+     */
+    void set_voices_limit(int voices_number);
 
     [[nodiscard]] vector<pair<Player::Note, bool>> get_current_notes() const;
 
+    /**
+     * Change current instrument.
+     * @param name name of a instrument
+     */
     void set_instrument(const string& name);
 
     const string& get_current_instrument();
@@ -116,8 +160,6 @@ private:
     void start() const;
 
     void load_instruments();
-
-    void clear_voices();
 
     void load_key_file();
 
@@ -140,16 +182,11 @@ private:
     unique_ptr<Voice> get_synth_instrument(const string& name);
 };
 
+/**
+ * The base class of all Voices.
+ */
 class Voice {
-private:
-    maxiEnv env;
-    double volume{};
-    double freq{};
-
-    virtual Voice* new_copy() = 0;
-
 public:
-
     Voice* clone()
     {
         return new_copy();
@@ -187,7 +224,7 @@ public:
     {
         if (!env.trigger) {
             env.trigger = 1;
-            freq = Player::noteToFrequency(note);
+            freq = note.get_frequency();
             turn_on_something();
         }
     }
@@ -211,9 +248,7 @@ public:
     {
         return env.trigger;
     }
-};
 
-class SynthVoice : public Voice {
 private:
     vector<maxiOsc> oscillators;
     struct OscSpec {
@@ -222,11 +257,10 @@ private:
     };
     vector<OscSpec> osc_specs;
 
-    Voice* new_copy() override
-    {
-        return new SynthVoice(*this);
-    }
+    virtual Voice* new_copy() = 0;
+};
 
+class SynthVoice : public Voice {
 public:
     SynthVoice()
             :Voice({10, 50, 100, 1000}) { }
@@ -261,6 +295,14 @@ public:
             spec.volume /= total_vol;
         });
     }
+
+private:
+    maxiOsc osc;
+
+    Voice* new_copy() override
+    {
+        return new SynthVoice(*this);
+    }
 };
 
 class SamplerVoice : public Voice {
@@ -287,14 +329,17 @@ public:
     void set_loop(const array<long, 2>& loop);
 
 private:
+    maxiSample sample;
+    bool shouldTurnOn = false;
+    Player::Note base_note;
+    long loop_begin{};
+    long loop_end{};
+    long loop_length{};
+
     Voice* new_copy() override
     {
         return new SamplerVoice(*this);
     }
-
-    maxiSample sample;
-    bool shouldTurnOn = false;
-    Player::Note base_note;
 
     Sample_iterator find_zero_cross_near(vector<double>::const_iterator position);
 
@@ -305,10 +350,6 @@ private:
     double how_close(Sample_iterator begin, Sample_iterator end);
 
     Sample_iterator find_loop_at(Sample_iterator& start, int count);
-
-    long loop_begin{};
-    long loop_end{};
-    long loop_length{};
 };
 
 template<class T>

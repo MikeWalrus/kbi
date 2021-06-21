@@ -4,6 +4,7 @@ cmake-build-debug/
 .idea/
 
 src/resource/kbi.gresourse.c
+src/maximilian/maximilian.cpp
 
 *.[oa]
 *~

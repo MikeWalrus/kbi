@@ -8,105 +8,97 @@
 
 KbiWindow::KbiWindow(Player* p_player)
         :
-        kbi_box_top(Gtk::Orientation::VERTICAL, 0),
-        kbi_box1(Gtk::Orientation::VERTICAL, 20),
-        kbi_box2(Gtk::Orientation::HORIZONTAL, 20),
-        kbi_box_switch(Gtk::Orientation::HORIZONTAL, 0),
-        kbi_box_combobox(Gtk::Orientation::HORIZONTAL, 0),
+        kbi_vbox_top(Gtk::Orientation::VERTICAL, 0),
+        kbi_vbox_draw(Gtk::Orientation::VERTICAL, 20),
+        kbi_hbox_button(Gtk::Orientation::HORIZONTAL, 20),
+        kbi_hbox_switch(Gtk::Orientation::HORIZONTAL, 0),
+        kbi_hbox_instruments_setting(Gtk::Orientation::HORIZONTAL, 10),
+        kbi_hbox_combobox(Gtk::Orientation::HORIZONTAL, 0),
         kbi_button_control_play_or_stop("Play"),
         kbi_button_quit("Close"),
         player(p_player),
         kbi_draw(p_player),
-        controller(controllers.at("default")(p_player)),
+        controller(nullptr),
+        instrument_combo_box([p_player](const string& s) { p_player->set_instrument(s); },
+                p_player->get_all_instruments()),
+        is_playing(false),
+        ctrl_combo_box([this](const string& s) { set_control(s); }, get_all_keys(controllers)),
         settings(Gtk::Settings::get_default())
 {
     settings->property_gtk_application_prefer_dark_theme().set_value(TRUE);
 
     //set child widgets
-    set_child(kbi_box_top);
+    set_child(kbi_vbox_top);
     set_title("kbi");
     set_default_size(KbiWindow::kbi_window_width, KbiWindow::kbi_window_height);
-    kbi_box_top.append(kbi_box1);
-    kbi_box_top.append(kbi_box2);
-    kbi_box1.set_size_request(KbiWindow::kbi_window_width, KbiWindow::kbi_window_height - 100);
-    kbi_box1.set_expand(true);
-    kbi_box1.append(kbi_draw);
-    kbi_box2.append(kbi_box_switch);
-    kbi_box2.append(kbi_box_combobox);
-    kbi_box2.append(kbi_button_control_play_or_stop);
-    kbi_box2.append(kbi_button_quit);
-    kbi_box_switch.append(*Gtk::make_managed<Gtk::Label>("Polyphonic", 0));
-    kbi_box_switch.append(kbi_switch_control_voices_limit);
-    kbi_box_switch.set_margin_start(10);
-    kbi_box_switch.set_margin_end(10);
-    kbi_box_combobox.append(*Gtk::make_managed<Gtk::Label>("Instruments", 0));
-    kbi_box_combobox.append(kbi_combobox_instruments);
+    box_append(kbi_vbox_top, kbi_vbox_draw, kbi_hbox_instruments_setting, kbi_hbox_button);
+    kbi_vbox_draw.set_size_request(KbiWindow::kbi_window_width, KbiWindow::kbi_window_height - 200);
+    kbi_vbox_draw.set_expand(true);
+    kbi_vbox_draw.append(kbi_draw);
+    box_append(kbi_hbox_instruments_setting, kbi_hbox_switch, kbi_hbox_combobox);
+    box_append(kbi_hbox_button, kbi_button_control_play_or_stop, kbi_button_quit);
+    box_append(kbi_hbox_switch, *Gtk::make_managed<Gtk::Label>("Polyphonic", 0), kbi_switch_control_voices_limit);
+    kbi_hbox_switch.set_margin_start(10);
+    kbi_hbox_switch.set_margin_end(10);
+    box_append(kbi_hbox_combobox, *Gtk::make_managed<Gtk::Label>("Instruments", 0), instrument_combo_box.combo_box);
+    box_append(kbi_hbox_combobox, *Gtk::make_managed<Gtk::Label>("Controls", 0), ctrl_combo_box.combo_box);
 
     //set kbi_button_control_play_or_stop
-    init_button(kbi_button_control_play_or_stop);
+    init_widget(kbi_button_control_play_or_stop);
+    kbi_button_control_play_or_stop.set_size_request(300, 50);
     kbi_button_control_play_or_stop.signal_clicked().connect(
             sigc::mem_fun(*this, &KbiWindow::on_button_control_play_or_stop_clicked));
 
     //set kbi_button_quit
-    init_button(kbi_button_quit);
+    init_widget(kbi_button_quit);
+    kbi_button_quit.set_size_request(300, 50);
     kbi_button_quit.signal_clicked().connect(
             sigc::mem_fun(*this, &KbiWindow::on_button_quit_clicked));
 
     //set kbi_switch_control_voices_limit
-    kbi_switch_control_voices_limit.set_margin(10);
-    kbi_switch_control_voices_limit.set_vexpand(false);
+    init_widget(kbi_switch_control_voices_limit);
     kbi_switch_control_voices_limit.set_hexpand(false);
-    kbi_switch_control_voices_limit.set_valign(Gtk::Align::CENTER);
-    kbi_switch_control_voices_limit.set_halign(Gtk::Align::FILL);
     kbi_switch_control_voices_limit.set_active(true);
     kbi_switch_control_voices_limit.property_active().signal_changed().connect(
             sigc::mem_fun(*this, &KbiWindow::on_switch_control_voices_limit_clicked));
 
-    //set kbi_combobox_instruments
-    kbi_combobox_instruments.set_margin(10);
-    kbi_combobox_instruments.set_vexpand(false);
-    kbi_combobox_instruments.set_hexpand(true);
-    kbi_combobox_instruments.set_valign(Gtk::Align::CENTER);
-    kbi_combobox_instruments.set_halign(Gtk::Align::FILL);
-    //create the tree model
-    kbi_ref_treemodel = Gtk::ListStore::create(kbi_columns);
-    kbi_combobox_instruments.set_model(kbi_ref_treemodel);
-    kbi_combobox_instruments.pack_start(kbi_columns.kbi_instruments_name);
-    kbi_combobox_instruments.signal_changed().connect(
-            sigc::mem_fun(*this, &KbiWindow::on_combobox));
-    //fill the tree model
-    load_instrument_tree_model();
+    init_widget(instrument_combo_box.combo_box);
+    init_widget(ctrl_combo_box.combo_box);
 
     setup();
 }
 
-void KbiWindow::load_instrument_tree_model()
+void KbiWindow::box_append(Gtk::Box& box, Gtk::Widget& widget1, Gtk::Widget& widget2)
 {
-    auto instruments = player->get_all_instruments();
-    for (const auto& name : instruments) {
-        auto row = *(kbi_ref_treemodel->append());
-        row[kbi_columns.kbi_instruments_name] = name;
-    }
-    kbi_combobox_instruments.set_active(0);
+    box.append(widget1);
+    box.append(widget2);
 }
 
-void KbiWindow::init_button(Gtk::Button& bu)
+void KbiWindow::box_append(Gtk::Box& box, Gtk::Widget& widget1, Gtk::Widget& widget2, Gtk::Widget& widget3)
 {
-    bu.set_margin(10);
-    bu.set_vexpand(false);
-    bu.set_hexpand(true);
-    bu.set_valign(Gtk::Align::CENTER);
-    bu.set_halign(Gtk::Align::FILL);
+    box.append(widget1);
+    box.append(widget2);
+    box.append(widget3);
+}
+
+void KbiWindow::init_widget(Gtk::Widget& widget)
+{
+    widget.set_margin(10);
+    widget.set_vexpand(false);
+    widget.set_hexpand(true);
+    widget.set_valign(Gtk::Align::CENTER);
+    widget.set_halign(Gtk::Align::FILL);
 }
 
 void KbiWindow::on_button_control_play_or_stop_clicked()
 {
-    bool isPlaying = player->toggle();
-    if (isPlaying) {
+    is_playing = player->toggle();
+    if (is_playing) {
         kbi_button_control_play_or_stop.set_label("Stop");
         add_controller(controller->get_ctrl_key());
     }
     else {
+        controller->stop_everything();
         kbi_button_control_play_or_stop.set_label("Play");
         remove_controller(controller->get_ctrl_key());
     }
@@ -125,9 +117,23 @@ void KbiWindow::on_switch_control_voices_limit_clicked()
     player->set_voices_limit(voices_number);
 }
 
-void KbiWindow::on_combobox()
+void KbiWindow::set_control(const Glib::ustring& name)
 {
-    const auto iter = kbi_combobox_instruments.get_active();
+    if (is_playing) {
+        is_playing = player->toggle();
+        kbi_button_control_play_or_stop.set_label("Play");
+        remove_controller(controller->get_ctrl_key());
+        controller->stop_everything();
+    }
+    controller = controllers.at(name)(player);
+}
+
+KbiWindow::~KbiWindow()
+= default;
+
+void MyComboBox::on_change()
+{
+    const auto iter = combo_box.get_active();
     if (!iter) {
         return;
     }
@@ -135,9 +141,15 @@ void KbiWindow::on_combobox()
     if (!row) {
         return;
     }
-    string instrument_name = row[kbi_columns.kbi_instruments_name];
-    player->set_instrument(instrument_name);
+    string s = row[columns.names];
+    change_something(s);
 }
 
-KbiWindow::~KbiWindow()
-= default;
+void MyComboBox::load_tree_model(const vector<Glib::ustring>& names)
+{
+    for (const auto& name : names) {
+        auto row = *(tree->append());
+        row[columns.names] = name;
+    }
+    combo_box.set_active(0);
+}

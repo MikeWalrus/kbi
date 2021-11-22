@@ -1,5 +1,6 @@
 # kbi
 ![](demo.gif)
+
 Play customizable instruments with your computer keyboard!
 
 ## How to compile `kbi`?
